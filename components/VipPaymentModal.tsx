@@ -54,6 +54,8 @@ export function VipPaymentModal({ isOpen, onClose, onSuccess }: VipPaymentModalP
         try {
             const currentUserId = userId || getUserId();
 
+            if (!currentUserId) throw new Error('User ID not found');
+
             const res = await fetch('/api/payment/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
