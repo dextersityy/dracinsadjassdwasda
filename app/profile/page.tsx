@@ -15,6 +15,24 @@ interface TelegramUser {
     photo_url?: string;
 }
 
+// Declare Telegram WebApp on window
+declare global {
+    interface Window {
+        Telegram?: {
+            WebApp?: {
+                ready: () => void;
+                expand: () => void;
+                initData?: string;
+                initDataUnsafe?: {
+                    user?: TelegramUser;
+                };
+                platform?: string;
+                version?: string;
+            };
+        };
+    }
+}
+
 export default function ProfilePage() {
     const router = useRouter();
     const { credits, videosWatched, isVip, vipExpiry, activateVip } = useCredits();
@@ -27,42 +45,45 @@ export default function ProfilePage() {
     useEffect(() => {
         setMounted(true);
 
-        // Read user data from Telegram WebApp SDK
+        // Native Window Object approach for Telegram SDK
         const initTelegram = () => {
-            const telegram = (window as unknown as {
-                Telegram?: {
-                    WebApp?: {
-                        ready: () => void;
-                        initDataUnsafe?: { user?: TelegramUser };
-                        initData?: string;
-                        platform?: string;
-                        version?: string;
-                    }
-                }
-            }).Telegram;
-
-            // Collect debug info
             const debug: string[] = [];
-            debug.push(`Time: ${new Date().toLocaleTimeString()}`);
-            debug.push(`Has Telegram: ${!!telegram}`);
-            debug.push(`Has WebApp: ${!!telegram?.WebApp}`);
+            debug.push(`⏰ Time: ${new Date().toLocaleTimeString()}`);
 
-            if (telegram?.WebApp) {
-                // Call ready() to notify Telegram the app is ready
-                telegram.WebApp.ready();
+            // Check if Telegram SDK is loaded
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
 
-                debug.push(`Platform: ${telegram.WebApp.platform || 'unknown'}`);
-                debug.push(`Version: ${telegram.WebApp.version || 'unknown'}`);
-                debug.push(`initData length: ${telegram.WebApp.initData?.length || 0}`);
-                debug.push(`Has user: ${!!telegram.WebApp.initDataUnsafe?.user}`);
+                // Wajib dipanggil
+                tg.ready();
+                tg.expand(); // Expand full screen
 
-                if (telegram.WebApp.initDataUnsafe?.user) {
-                    const u = telegram.WebApp.initDataUnsafe.user;
-                    debug.push(`User ID: ${u.id}`);
-                    debug.push(`First name: ${u.first_name}`);
-                    setUser(u);
+                debug.push(`✅ Telegram SDK Loaded`);
+                debug.push(`📱 Platform: ${tg.platform || 'unknown'}`);
+                debug.push(`🔢 Version: ${tg.version || 'unknown'}`);
+                debug.push(`📦 initData length: ${tg.initData?.length || 0}`);
+
+                // Ambil data dari initDataUnsafe (paling stabil untuk MVP)
+                const user = tg.initDataUnsafe?.user;
+
+                if (user) {
+                    debug.push(`✅ User Found!`);
+                    debug.push(`🆔 ID: ${user.id}`);
+                    debug.push(`👤 Name: ${user.first_name} ${user.last_name || ''}`);
+                    debug.push(`📧 Username: @${user.username || 'none'}`);
+
+                    console.log("User Info:", user);
+                    setUser({
+                        id: user.id,
+                        first_name: user.first_name,
+                        last_name: user.last_name,
+                        username: user.username,
+                        photo_url: user.photo_url
+                    });
                 } else {
-                    debug.push('No user in initDataUnsafe');
+                    debug.push(`⚠️ User data tidak ditemukan`);
+                    debug.push(`💡 Pastikan dibuka di Telegram App`);
+                    console.warn("User data tidak ditemukan. Pastikan dibuka di Telegram App.");
                     setUser({
                         id: 0,
                         first_name: "Telegram",
@@ -70,7 +91,8 @@ export default function ProfilePage() {
                     });
                 }
             } else {
-                debug.push('Not in Telegram WebApp');
+                debug.push(`❌ Telegram SDK Not Loaded`);
+                debug.push(`💡 Bukan di dalam Telegram`);
                 setUser({
                     id: 0,
                     first_name: "Guest",
@@ -81,9 +103,9 @@ export default function ProfilePage() {
             setDebugInfo(debug.join('\n'));
         };
 
-        // Try immediately and after delay
+        // Try immediately and after delay to ensure SDK is loaded
         initTelegram();
-        setTimeout(initTelegram, 500);
+        setTimeout(initTelegram, 1000);
     }, []);
 
     const remainingVideos = credits * 10 - videosWatched;

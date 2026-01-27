@@ -24,18 +24,14 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="dark">
       <head>
-        {/* Telegram WebApp SDK - Must load first */}
-        <Script
-          src="https://telegram.org/js/telegram-web-app.js"
-          strategy="beforeInteractive"
-        />
+        {/* Telegram WebApp SDK - Raw script for better compatibility */}
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
         {/* Monetag SDK */}
-        <Script
+        <script
           src="//libtl.com/sdk.js"
           data-zone="10522796"
           data-sdk="show_10522796"
-          strategy="afterInteractive"
-        />
+        ></script>
       </head>
       <body className={inter.className}>
         <SettingsProvider>
