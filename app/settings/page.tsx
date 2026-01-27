@@ -1,12 +1,18 @@
 "use client";
 
-import { Settings, Moon, Sun, Monitor, Check } from 'lucide-react';
+import { Settings, Moon, Sun, Monitor, Check, Shield } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useCredits } from '@/contexts/CreditContext';
 
+// Ganti dengan ID user kamu yang asli
+const ADMIN_IDS = [
+    '5009968560', // Ganti dengan ID Telegram kamu
+    '7242253325'
+];
+
 export default function SettingsPage() {
     const { theme, resolution, setTheme, setResolution } = useSettings();
-    const { isVip } = useCredits();
+    const { isVip, userId } = useCredits();
 
     type Resolution = '480p' | '720p' | '1080p';
 
@@ -25,6 +31,25 @@ export default function SettingsPage() {
                 </div>
                 <h1 className="text-2xl font-bold">Pengaturan</h1>
             </div>
+
+            {/* Admin Panel (Hidden) */}
+            {userId && ADMIN_IDS.includes(userId.toString()) && (
+                <section className="mb-6">
+                    <div className="glass-card rounded-2xl p-1 bg-gradient-to-r from-red-900/40 to-red-800/40 border border-red-500/30">
+                        <a
+                            href="/admin-dracin"
+                            className="flex items-center gap-3 p-4 rounded-xl hover:bg-white/5 transition"
+                        >
+                            <Shield className="w-5 h-5 text-red-500" />
+                            <div className="text-left flex-1">
+                                <p className="font-bold text-red-400">Admin Panel</p>
+                                <p className="text-xs text-gray-500">Akses Khusus Admin</p>
+                            </div>
+                            <Settings className="w-4 h-4 text-red-400 opacity-50" />
+                        </a>
+                    </div>
+                </section>
+            )}
 
             {/* Theme Section */}
             <section className="mb-6">
