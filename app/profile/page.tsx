@@ -21,6 +21,8 @@ export default function ProfilePage() {
     const [mounted, setMounted] = useState(false);
     const [showVipPayment, setShowVipPayment] = useState(false);
     const [user, setUser] = useState<TelegramUser | null>(null);
+    const [showDebug, setShowDebug] = useState(false);
+    const [debugInfo, setDebugInfo] = useState<string>('');
 
     useEffect(() => {
         setMounted(true);
@@ -33,47 +35,55 @@ export default function ProfilePage() {
                         ready: () => void;
                         initDataUnsafe?: { user?: TelegramUser };
                         initData?: string;
+                        platform?: string;
+                        version?: string;
                     }
                 }
             }).Telegram;
+
+            // Collect debug info
+            const debug: string[] = [];
+            debug.push(`Time: ${new Date().toLocaleTimeString()}`);
+            debug.push(`Has Telegram: ${!!telegram}`);
+            debug.push(`Has WebApp: ${!!telegram?.WebApp}`);
 
             if (telegram?.WebApp) {
                 // Call ready() to notify Telegram the app is ready
                 telegram.WebApp.ready();
 
-                // Check if user data is available
+                debug.push(`Platform: ${telegram.WebApp.platform || 'unknown'}`);
+                debug.push(`Version: ${telegram.WebApp.version || 'unknown'}`);
+                debug.push(`initData length: ${telegram.WebApp.initData?.length || 0}`);
+                debug.push(`Has user: ${!!telegram.WebApp.initDataUnsafe?.user}`);
+
                 if (telegram.WebApp.initDataUnsafe?.user) {
-                    setUser(telegram.WebApp.initDataUnsafe.user);
-                    console.log('[Profile] Telegram user loaded:', telegram.WebApp.initDataUnsafe.user);
-                } else if (telegram.WebApp.initData) {
-                    // initData exists but user not parsed - try to parse
-                    console.log('[Profile] initData exists but no user object');
+                    const u = telegram.WebApp.initDataUnsafe.user;
+                    debug.push(`User ID: ${u.id}`);
+                    debug.push(`First name: ${u.first_name}`);
+                    setUser(u);
+                } else {
+                    debug.push('No user in initDataUnsafe');
                     setUser({
                         id: 0,
                         first_name: "Telegram",
                         last_name: "User",
                     });
-                } else {
-                    console.log('[Profile] No telegram user data available');
-                    setUser({
-                        id: 0,
-                        first_name: "Guest",
-                        last_name: "User",
-                    });
                 }
             } else {
-                // Not in Telegram - fallback
-                console.log('[Profile] Not in Telegram WebApp');
+                debug.push('Not in Telegram WebApp');
                 setUser({
                     id: 0,
                     first_name: "Guest",
                     last_name: "User",
                 });
             }
+
+            setDebugInfo(debug.join('\n'));
         };
 
-        // Small delay to ensure SDK is loaded
-        setTimeout(initTelegram, 100);
+        // Try immediately and after delay
+        initTelegram();
+        setTimeout(initTelegram, 500);
     }, []);
 
     const remainingVideos = credits * 10 - videosWatched;
@@ -181,6 +191,23 @@ export default function ProfilePage() {
                         <p className="text-gray-400 text-sm">1 Kredit = 10 Video</p>
                         <p className="text-gray-500 text-xs mt-1">Tonton iklan untuk dapat kredit gratis</p>
                     </div>
+                </div>
+
+                {/* Debug Panel Toggle */}
+                <div className="px-4 mt-4">
+                    <button
+                        onClick={() => setShowDebug(!showDebug)}
+                        className="w-full text-center text-xs text-gray-600 py-2"
+                    >
+                        {showDebug ? '[ Hide Debug Info ]' : '[ Show Debug Info ]'}
+                    </button>
+
+                    {showDebug && (
+                        <div className="mt-2 p-3 rounded-lg bg-gray-900 border border-gray-800 text-xs font-mono">
+                            <p className="text-green-400 mb-2">Telegram SDK Debug:</p>
+                            <pre className="text-gray-400 whitespace-pre-wrap">{debugInfo || 'Loading...'}</pre>
+                        </div>
+                    )}
                 </div>
             </div>
 

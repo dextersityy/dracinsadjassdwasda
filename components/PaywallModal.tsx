@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useCredits } from '@/contexts/CreditContext';
 import { Play, Crown, Tv, Zap, X, AlertCircle } from 'lucide-react';
 import { VipPaymentModal } from '@/components/VipPaymentModal';
+import createAdHandler from 'monetag-tg-sdk';
 
 interface PaywallModalProps {
     isOpen: boolean;
@@ -11,12 +12,9 @@ interface PaywallModalProps {
     onSuccess: () => void;
 }
 
-// Declare the Monetag SDK function type
-declare global {
-    interface Window {
-        show_10522796: (options?: { ymid?: string; type?: string }) => Promise<void>;
-    }
-}
+// Create ad handler with your zone ID
+const ZONE_ID = 10522796;
+const showRewardedAd = createAdHandler(ZONE_ID);
 
 export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) {
     const { addCredits, credits, videosWatched } = useCredits();
@@ -27,41 +25,14 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
 
     if (!isOpen) return null;
 
-    // Wait for SDK to be ready with retries
-    const waitForSdk = (): Promise<void> => {
-        return new Promise((resolve, reject) => {
-            let attempts = 0;
-            const maxAttempts = 10; // 10 attempts = 5 seconds max
-
-            const check = () => {
-                attempts++;
-                console.log(`[Monetag] Checking SDK... attempt ${attempts}`);
-
-                if (typeof window.show_10522796 === 'function') {
-                    console.log('[Monetag] SDK ready!');
-                    resolve();
-                } else if (attempts >= maxAttempts) {
-                    console.log('[Monetag] SDK not available after max attempts');
-                    reject(new Error('SDK not loaded'));
-                } else {
-                    setTimeout(check, 500);
-                }
-            };
-            check();
-        });
-    };
-
     const handleWatchAd = async () => {
         setIsLoadingAd(true);
         setAdError(null);
 
         try {
-            // Wait for SDK to be ready
-            await waitForSdk();
-
-            // Show the rewarded ad
+            // Show the rewarded ad using npm package
             console.log('[Monetag] Showing ad...');
-            await window.show_10522796({ ymid: `user-${Date.now()}` });
+            await showRewardedAd();
 
             // User completed ad - reward 10 credits
             console.log('[Monetag] Ad completed, rewarding user');
@@ -75,8 +46,8 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
 
             if (error.message?.includes('Network')) {
                 setAdError('Koneksi gagal. Pastikan tidak ada ad blocker aktif.');
-            } else if (error.message?.includes('SDK')) {
-                setAdError('SDK iklan belum siap. Pastikan buka dari Telegram Mini App.');
+            } else if (error.message?.includes('timeout') || error.message?.includes('unavailable')) {
+                setAdError('Iklan tidak tersedia. Coba lagi nanti.');
             } else {
                 setAdError('Iklan tidak tersedia atau user menutup iklan.');
             }
