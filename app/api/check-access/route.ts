@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { FieldValue } from 'firebase-admin/firestore';
+import { doc, getDoc, setDoc, updateDoc, increment, serverTimestamp, Timestamp } from 'firebase/firestore';
 
 export async function POST(req: NextRequest) {
     try {
@@ -10,18 +10,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ allowed: false, reason: 'invalid_user' }, { status: 400 });
         }
 
-        const userRef = db.collection('users').doc(userId);
-        const userSnap = await userRef.get();
+        const userRef = doc(db, 'users', userId);
+        const userSnap = await getDoc(userRef);
 
-        if (!userSnap.exists) {
+        if (!userSnap.exists()) {
             // Create user if not exists (Auto-register for MVP)
-            await userRef.set({
+            await setDoc(userRef, {
                 telegramId: userId,
                 credits: 10,
                 isVip: false,
                 vipExpiry: null,
                 walletBalance: 0,
-                createdAt: FieldValue.serverTimestamp(),
+                createdAt: serverTimestamp(),
             });
             return NextResponse.json({ allowed: true, remaining: 9 }); // 10 - 1
         }
@@ -31,18 +31,19 @@ export async function POST(req: NextRequest) {
         // Check VIP
         if (userData?.isVip) {
             const now = new Date();
-            if (userData.vipExpiry && userData.vipExpiry.toDate() > now) {
+            const vipExpiry = userData.vipExpiry as Timestamp | null;
+            if (vipExpiry && vipExpiry.toDate() > now) {
                 return NextResponse.json({ allowed: true, isVip: true });
             } else {
                 // VIP expired
-                await userRef.update({ isVip: false });
+                await updateDoc(userRef, { isVip: false });
             }
         }
 
         // Check Credits
-        if (userData?.credits > 0) {
-            await userRef.update({
-                credits: FieldValue.increment(-1),
+        if (userData && userData.credits > 0) {
+            await updateDoc(userRef, {
+                credits: increment(-1),
             });
             return NextResponse.json({ allowed: true, remaining: userData.credits - 1 });
         }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { FieldValue } from 'firebase-admin/firestore';
+import { doc, updateDoc, increment } from 'firebase/firestore';
 
 export async function POST(req: NextRequest) {
     try {
@@ -13,9 +13,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false }, { status: 400 });
         }
 
-        const userRef = db.collection('users').doc(userId);
-        await userRef.update({
-            credits: FieldValue.increment(10), // Reward 10 credits
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, {
+            credits: increment(10), // Reward 10 credits
         });
 
         return NextResponse.json({ success: true, message: 'Credits added' });
