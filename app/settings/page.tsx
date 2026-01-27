@@ -62,17 +62,23 @@ export default function SettingsPage() {
             {isAdmin && (
                 <section className="mb-6">
                     <div className="glass-card rounded-2xl p-1 bg-gradient-to-r from-red-900/40 to-red-800/40 border border-red-500/30">
-                        <a
-                            href="/admin-dracin"
-                            className="flex items-center gap-3 p-4 rounded-xl hover:bg-white/5 transition"
-                        >
-                            <Shield className="w-5 h-5 text-red-500" />
-                            <div className="text-left flex-1">
-                                <p className="font-bold text-red-400">Admin Panel</p>
-                                <p className="text-xs text-gray-500">Akses Khusus Admin</p>
+                        <div className="p-4">
+                            <a
+                                href="/admin-dracin"
+                                className="flex items-center gap-3 mb-3 p-2 rounded-lg hover:bg-white/5 transition"
+                            >
+                                <Shield className="w-5 h-5 text-red-500" />
+                                <div className="text-left flex-1">
+                                    <p className="font-bold text-red-400">Buka Admin Panel</p>
+                                </div>
+                                <Settings className="w-4 h-4 text-red-400 opacity-50" />
+                            </a>
+                            <div className="bg-black/40 p-3 rounded-lg border border-white/10">
+                                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Firebase UID Admin</p>
+                                <code className="text-xs text-amber-500 break-all select-all">{userId || 'Loading...'}</code>
+                                <p className="text-[10px] text-gray-400 mt-2">Copy UID di atas ke Firestore Rules</p>
                             </div>
-                            <Settings className="w-4 h-4 text-red-400 opacity-50" />
-                        </a>
+                        </div>
                     </div>
                 </section>
             )}
