@@ -1,7 +1,9 @@
 import { CreditProvider } from '@/contexts/CreditContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import { ReferralProvider } from '@/contexts/ReferralContext';
+import { PlayerProvider } from '@/contexts/PlayerContext';
 import { BottomNav } from '@/components/BottomNav';
+import { GlobalMiniPlayer } from '@/components/GlobalMiniPlayer';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Script from 'next/script';
@@ -39,8 +41,11 @@ export default function RootLayout({
         <SettingsProvider>
           <CreditProvider>
             <ReferralProvider>
-              {children}
-              <BottomNav />
+              <PlayerProvider>
+                {children}
+                <GlobalMiniPlayer />
+                <BottomNav />
+              </PlayerProvider>
             </ReferralProvider>
           </CreditProvider>
         </SettingsProvider>

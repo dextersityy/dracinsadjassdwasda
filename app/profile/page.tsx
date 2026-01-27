@@ -7,23 +7,37 @@ import clsx from 'clsx';
 import { useCredits } from '@/contexts/CreditContext';
 import { VipPaymentModal } from '@/components/VipPaymentModal';
 
+interface TelegramUser {
+    id: number;
+    first_name: string;
+    last_name?: string;
+    username?: string;
+    photo_url?: string;
+}
+
 export default function ProfilePage() {
     const router = useRouter();
     const { credits, videosWatched, isVip, vipExpiry, activateVip } = useCredits();
     const [mounted, setMounted] = useState(false);
     const [showVipPayment, setShowVipPayment] = useState(false);
+    const [user, setUser] = useState<TelegramUser | null>(null);
 
     useEffect(() => {
         setMounted(true);
-    }, []);
 
-    // Mock Telegram User Data
-    const user = {
-        firstName: "User",
-        lastName: "Telegram",
-        id: "123456789",
-        photoUrl: "",
-    };
+        // Read user data from Telegram WebApp SDK
+        const telegram = (window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: TelegramUser } } } }).Telegram;
+        if (telegram?.WebApp?.initDataUnsafe?.user) {
+            setUser(telegram.WebApp.initDataUnsafe.user);
+        } else {
+            // Fallback for testing in browser (not in Telegram)
+            setUser({
+                id: 0,
+                first_name: "Guest",
+                last_name: "User",
+            });
+        }
+    }, []);
 
     const remainingVideos = credits * 10 - videosWatched;
 
@@ -43,7 +57,7 @@ export default function ProfilePage() {
         router.push('/referral');
     };
 
-    if (!mounted) return null;
+    if (!mounted || !user) return null;
 
     return (
         <>
@@ -53,15 +67,15 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-4">
                         <div className="h-20 w-20 rounded-full bg-gradient-to-tr from-amber-500 to-pink-500 p-[2px]">
                             <div className="h-full w-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                                {user.photoUrl ? (
-                                    <img src={user.photoUrl} alt="Profile" className="h-full w-full object-cover" />
+                                {user.photo_url ? (
+                                    <img src={user.photo_url} alt="Profile" className="h-full w-full object-cover" />
                                 ) : (
                                     <User size={32} className="text-gray-400" />
                                 )}
                             </div>
                         </div>
                         <div className="flex-1">
-                            <h1 className="text-xl font-bold">{user.firstName} {user.lastName}</h1>
+                            <h1 className="text-xl font-bold">{user.first_name} {user.last_name || ''}</h1>
                             <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
                                 <span>ID: {user.id}</span>
                                 <Copy size={12} className="cursor-pointer hover:text-white" />
