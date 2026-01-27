@@ -7,8 +7,7 @@ import { Users, Crown, Wallet, TrendingUp, RefreshCw, AlertCircle, ArrowUpRight,
 
 // Admin user IDs - Ganti dengan ID user kamu yang asli
 const ADMIN_IDS = [
-    '5009968560', // Ganti dengan ID Telegram kamu
-    'YOUR_ID_2'
+    '7559161536', // Ganti dengan ID Telegram kamu
 ];
 
 interface Stats {
@@ -232,8 +231,8 @@ export default function AdminPage() {
                                     <div className="flex items-center gap-2">
                                         <span className="font-mono text-gray-400 text-xs">{wd.id.slice(0, 8)}...</span>
                                         <span className={`text-xs px-2 py-0.5 rounded-full ${wd.status === 'paid' ? 'bg-green-500/20 text-green-500' :
-                                                wd.status === 'rejected' ? 'bg-red-500/20 text-red-500' :
-                                                    'bg-yellow-500/20 text-yellow-500'
+                                            wd.status === 'rejected' ? 'bg-red-500/20 text-red-500' :
+                                                'bg-yellow-500/20 text-yellow-500'
                                             }`}>
                                             {wd.status.toUpperCase()}
                                         </span>

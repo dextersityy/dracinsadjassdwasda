@@ -6,8 +6,8 @@ import { useCredits } from '@/contexts/CreditContext';
 
 // Ganti dengan ID user kamu yang asli
 const ADMIN_IDS = [
-    '5009968560', // Ganti dengan ID Telegram kamu
-    '7242253325'
+    '7559161536', // Ganti dengan ID Telegram kamu
+
 ];
 
 export default function SettingsPage() {
