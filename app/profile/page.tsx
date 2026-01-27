@@ -39,17 +39,13 @@ export default function ProfilePage() {
     const [mounted, setMounted] = useState(false);
     const [showVipPayment, setShowVipPayment] = useState(false);
     const [user, setUser] = useState<TelegramUser | null>(null);
-    const [showDebug, setShowDebug] = useState(true); // Default to true for debugging
-    const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
+
 
     useEffect(() => {
         setMounted(true);
 
         // Native Window Object approach for Telegram SDK
         const initTelegram = () => {
-            const debug: string[] = [];
-            debug.push(`⏰ Time: ${new Date().toLocaleTimeString()}`);
-
             // Check if Telegram SDK is loaded
             if (window.Telegram && window.Telegram.WebApp) {
                 const tg = window.Telegram.WebApp;
@@ -58,20 +54,10 @@ export default function ProfilePage() {
                 tg.ready();
                 tg.expand(); // Expand full screen
 
-                debug.push(`✅ Telegram SDK Loaded`);
-                debug.push(`📱 Platform: ${tg.platform || 'unknown'}`);
-                debug.push(`🔢 Version: ${tg.version || 'unknown'}`);
-                debug.push(`📦 initData length: ${tg.initData?.length || 0}`);
-
                 // Ambil data dari initDataUnsafe (paling stabil untuk MVP)
                 const user = tg.initDataUnsafe?.user;
 
                 if (user) {
-                    debug.push(`✅ User Found!`);
-                    debug.push(`🆔 ID: ${user.id}`);
-                    debug.push(`👤 Name: ${user.first_name} ${user.last_name || ''}`);
-                    debug.push(`📧 Username: @${user.username || 'none'}`);
-
                     console.log("User Info:", user);
                     setUser({
                         id: user.id,
@@ -81,8 +67,6 @@ export default function ProfilePage() {
                         photo_url: user.photo_url
                     });
                 } else {
-                    debug.push(`⚠️ User data tidak ditemukan`);
-                    debug.push(`💡 Pastikan dibuka di Telegram App`);
                     console.warn("User data tidak ditemukan. Pastikan dibuka di Telegram App.");
                     setUser({
                         id: 0,
@@ -91,16 +75,12 @@ export default function ProfilePage() {
                     });
                 }
             } else {
-                debug.push(`❌ Telegram SDK Not Loaded`);
-                debug.push(`💡 Bukan di dalam Telegram`);
                 setUser({
                     id: 0,
                     first_name: "Guest",
                     last_name: "User",
                 });
             }
-
-            setDebugInfo(debug.join('\n'));
         };
 
         // Try immediately and after delay to ensure SDK is loaded
@@ -108,7 +88,7 @@ export default function ProfilePage() {
         setTimeout(initTelegram, 1000);
     }, []);
 
-    const remainingVideos = credits * 10 - videosWatched;
+    const remainingVideos = credits - videosWatched;
 
     const handleBuyVip = () => {
         setShowVipPayment(true);
@@ -131,25 +111,8 @@ export default function ProfilePage() {
     return (
         <>
             <div className="min-h-screen bg-[#0a0a0a] text-white pb-24">
-                {/* Debug Panel - Always visible at top */}
-                <div className="p-3 bg-gray-900 border-b border-gray-800">
-                    <button
-                        onClick={() => setShowDebug(!showDebug)}
-                        className="w-full text-center text-xs text-yellow-400 py-1 font-mono"
-                    >
-                        {showDebug ? '🔽 Hide Debug Info' : '🔼 Show Debug Info'}
-                    </button>
-
-                    {showDebug && (
-                        <div className="mt-2 p-3 rounded-lg bg-black border border-green-900 text-xs font-mono">
-                            <p className="text-green-400 mb-2 font-bold">📡 Telegram SDK Debug:</p>
-                            <pre className="text-green-300 whitespace-pre-wrap">{debugInfo}</pre>
-                        </div>
-                    )}
-                </div>
-
                 {/* Profile Header */}
-                <div className="relative pt-6 pb-6 px-6 bg-gradient-to-b from-gray-900 via-gray-900 to-[#0a0a0a] border-b border-white/5">
+                <div className="relative pt-10 pb-6 px-6 bg-gradient-to-b from-gray-900 via-gray-900 to-[#0a0a0a] border-b border-white/5">
                     <div className="flex items-center gap-4">
                         <div className="h-20 w-20 rounded-full bg-gradient-to-tr from-amber-500 to-pink-500 p-[2px]">
                             <div className="h-full w-full rounded-full bg-black flex items-center justify-center overflow-hidden">
@@ -192,7 +155,7 @@ export default function ProfilePage() {
                                     {isVip ? '∞' : remainingVideos}
                                 </h2>
                                 <p className="text-xs text-amber-100/70 mt-1">
-                                    {isVip ? 'Unlimited Access' : `${credits} kredit (${credits * 10} video)`}
+                                    {isVip ? 'Unlimited Access' : `${credits} kredit = ${credits} video`}
                                 </p>
                             </div>
                             <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md">

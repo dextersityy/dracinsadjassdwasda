@@ -144,7 +144,7 @@ export function TikTokPlayer({ episodes, dramaName, initialEpisodeIndex = 0, onC
     };
 
     // Calculate remaining videos
-    const remainingVideos = isVip ? '∞' : Math.max(0, (credits * 10) - videosWatched);
+    const remainingVideos = isVip ? '∞' : Math.max(0, credits - videosWatched);
 
     return (
         <>
