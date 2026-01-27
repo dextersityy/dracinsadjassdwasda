@@ -40,9 +40,9 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
             console.log('[Monetag] Showing ad...');
             await window.show_10522796();
 
-            // User completed ad - reward 10 credits
+            // User completed ad - reward 3 credits
             console.log('[Monetag] Ad completed, rewarding user');
-            addCredits(10);
+            addCredits(3);
             onSuccess();
         } catch (error: any) {
             console.warn('Ad failed or skipped:', error);
@@ -64,7 +64,7 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
 
     // Development fallback - give free credits
     const handleDevReward = () => {
-        addCredits(10);
+        addCredits(3);
         onSuccess();
     };
 
@@ -111,7 +111,7 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
                             </div>
                             <div className="flex-1 text-left">
                                 <h3 className="font-bold">{isLoadingAd ? 'Memuat...' : 'Tonton Iklan'}</h3>
-                                <p className="text-sm text-green-200">Dapatkan 10 kredit GRATIS</p>
+                                <p className="text-sm text-green-200">Dapatkan 3 kredit GRATIS</p>
                             </div>
                             <Zap size={20} className="text-yellow-300" />
                         </button>
@@ -135,23 +135,54 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
                             </div>
                         )}
 
-                        {/* VIP Option */}
+                        {/* Credit Pack Options */}
+                        <div className="grid grid-cols-2 gap-2">
+                            {/* Small Pack: Rp 100 = 30 Credits (Test Price) */}
+                            <button
+                                onClick={() => {/* TODO: Implement credit pack payment */
+                                    alert('Fitur beli credit pack coming soon!');
+                                }}
+                                className="p-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 transition"
+                            >
+                                <div className="text-lg font-bold">30</div>
+                                <div className="text-xs opacity-80">Kredit</div>
+                                <div className="text-sm font-bold mt-1">Rp 100</div>
+                            </button>
+
+                            {/* Large Pack: Rp 100 = 80 Credits (Test Price) */}
+                            <button
+                                onClick={() => {/* TODO: Implement credit pack payment */
+                                    alert('Fitur beli credit pack coming soon!');
+                                }}
+                                className="p-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition"
+                            >
+                                <div className="text-lg font-bold">80</div>
+                                <div className="text-xs opacity-80">Kredit</div>
+                                <div className="text-sm font-bold mt-1">Rp 100</div>
+                                <div className="text-[10px] text-green-300">HEMAT!</div>
+                            </button>
+                        </div>
+
+                        {/* VIP Option - Best Seller */}
                         <button
                             onClick={handleBuyVip}
-                            className="w-full p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-black flex items-center gap-4 hover:opacity-90 transition"
+                            className="w-full p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-black flex items-center gap-4 hover:opacity-90 transition relative overflow-hidden"
                         >
+                            <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">
+                                BEST SELLER
+                            </div>
                             <div className="h-12 w-12 rounded-full bg-black/20 flex items-center justify-center">
                                 <Crown size={24} />
                             </div>
                             <div className="flex-1 text-left">
                                 <h3 className="font-bold">Beli VIP</h3>
-                                <p className="text-sm text-amber-900">Unlimited • Rp 10.000/bulan</p>
+                                <p className="text-sm text-amber-900">Unlimited • Rp 100 (Test)</p>
                             </div>
                         </button>
 
                         {/* Info */}
                         <div className="pt-3 text-center text-xs text-gray-500">
-                            <p>1 Kredit = 10 Video</p>
+                            <p>1 Kredit = 1 Video</p>
                             <p className="mt-1">VIP = Unlimited tanpa iklan</p>
                         </div>
                     </div>
