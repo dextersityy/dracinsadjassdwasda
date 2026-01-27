@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { Settings, Moon, Sun, Monitor, Check, Shield } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useCredits } from '@/contexts/CreditContext';
@@ -7,12 +8,34 @@ import { useCredits } from '@/contexts/CreditContext';
 // Ganti dengan ID user kamu yang asli
 const ADMIN_IDS = [
     '7559161536', // Ganti dengan ID Telegram kamu
-
 ];
+
+// Type declaration for Telegram WebApp
+declare global {
+    interface Window {
+        Telegram?: {
+            WebApp?: {
+                initDataUnsafe?: {
+                    user?: {
+                        id?: number;
+                    };
+                };
+            };
+        };
+    }
+}
 
 export default function SettingsPage() {
     const { theme, resolution, setTheme, setResolution } = useSettings();
-    const { isVip, userId } = useCredits();
+    const { isVip } = useCredits();
+    const [telegramId, setTelegramId] = useState<string | null>(null);
+
+    // Get Telegram ID on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+            setTelegramId(window.Telegram.WebApp.initDataUnsafe.user.id.toString());
+        }
+    }, []);
 
     type Resolution = '480p' | '720p' | '1080p';
 
@@ -21,6 +44,9 @@ export default function SettingsPage() {
         { value: '720p', label: '720p HD', description: 'Rekomendasi', vipOnly: false },
         { value: '1080p', label: '1080p Full HD', description: 'VIP Only', vipOnly: true },
     ];
+
+    // Check if current user is admin by Telegram ID
+    const isAdmin = telegramId && ADMIN_IDS.includes(telegramId);
 
     return (
         <div className="min-h-screen pb-24 pt-4 px-4">
@@ -33,7 +59,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Admin Panel (Hidden) */}
-            {userId && ADMIN_IDS.includes(userId.toString()) && (
+            {isAdmin && (
                 <section className="mb-6">
                     <div className="glass-card rounded-2xl p-1 bg-gradient-to-r from-red-900/40 to-red-800/40 border border-red-500/30">
                         <a
