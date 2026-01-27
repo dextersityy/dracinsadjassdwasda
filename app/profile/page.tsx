@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Sparkles, Settings, ChevronRight, Copy, Crown, Tv, Users } from 'lucide-react';
+import { User, Sparkles, Settings, ChevronRight, Copy, Crown, Tv, Users, Coins, X } from 'lucide-react';
 import clsx from 'clsx';
 import { useCredits } from '@/contexts/CreditContext';
 import { VipPaymentModal } from '@/components/VipPaymentModal';
+import { CreditPackPaymentModal } from '@/components/CreditPackPaymentModal';
 
 interface TelegramUser {
     id: number;
@@ -39,7 +40,8 @@ export default function ProfilePage() {
     const [mounted, setMounted] = useState(false);
     const [showVipPayment, setShowVipPayment] = useState(false);
     const [user, setUser] = useState<TelegramUser | null>(null);
-
+    const [showCreditSelector, setShowCreditSelector] = useState(false);
+    const [selectedPack, setSelectedPack] = useState<'small' | 'large' | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -183,6 +185,7 @@ export default function ProfilePage() {
                 {/* Menu Options */}
                 <div className="px-4 py-2 space-y-3">
                     <MenuItem icon={Crown} label="Beli VIP" subLabel="Unlimited • Rp 10.000/bulan" highlight onClick={handleBuyVip} />
+                    <MenuItem icon={Coins} label="Beli Kredit" subLabel="30 kredit Rp 3.000 • 80 kredit Rp 7.000" onClick={() => setShowCreditSelector(true)} />
                     <MenuItem icon={Users} label="Program Referral" subLabel="Ajak teman, dapat komisi 30%" onClick={goToReferral} />
                     <MenuItem icon={Settings} label="Pengaturan" onClick={goToSettings} />
                 </div>
@@ -190,7 +193,7 @@ export default function ProfilePage() {
                 {/* Credit Info */}
                 <div className="px-4 mt-6">
                     <div className="p-4 rounded-xl bg-gray-900/50 border border-white/5 text-center">
-                        <p className="text-gray-400 text-sm">1 Kredit = 10 Video</p>
+                        <p className="text-gray-400 text-sm">1 Kredit = 1 Video</p>
                         <p className="text-gray-500 text-xs mt-1">Tonton iklan untuk dapat kredit gratis</p>
                     </div>
                 </div>
@@ -202,6 +205,53 @@ export default function ProfilePage() {
                 onClose={() => setShowVipPayment(false)}
                 onSuccess={handleVipSuccess}
             />
+
+            {/* Credit Selector Modal */}
+            {showCreditSelector && (
+                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-sm bg-gray-900 rounded-2xl border border-white/10 overflow-hidden">
+                        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                            <h3 className="font-bold text-white">Pilih Paket Kredit</h3>
+                            <button onClick={() => setShowCreditSelector(false)} className="text-gray-400">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-4 space-y-3">
+                            <button
+                                onClick={() => { setShowCreditSelector(false); setSelectedPack('small'); }}
+                                className="w-full p-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 transition flex items-center justify-between"
+                            >
+                                <div className="text-left">
+                                    <div className="text-lg font-bold">30 Kredit</div>
+                                    <div className="text-xs opacity-80">Paket Hemat</div>
+                                </div>
+                                <div className="text-xl font-bold">Rp 3.000</div>
+                            </button>
+
+                            <button
+                                onClick={() => { setShowCreditSelector(false); setSelectedPack('large'); }}
+                                className="w-full p-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition flex items-center justify-between"
+                            >
+                                <div className="text-left">
+                                    <div className="text-lg font-bold">80 Kredit</div>
+                                    <div className="text-xs opacity-80">Paket Super</div>
+                                </div>
+                                <div className="text-xl font-bold">Rp 7.000</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Credit Pack Payment Modal */}
+            {selectedPack && (
+                <CreditPackPaymentModal
+                    isOpen={true}
+                    onClose={() => setSelectedPack(null)}
+                    onSuccess={() => setSelectedPack(null)}
+                    packType={selectedPack}
+                />
+            )}
         </>
     );
 }

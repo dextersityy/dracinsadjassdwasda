@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useCredits } from '@/contexts/CreditContext';
-import { Play, Crown, Tv, Zap, X, AlertCircle } from 'lucide-react';
+import { Play, Crown, Tv, Zap, X, AlertCircle, Coins } from 'lucide-react';
 import { VipPaymentModal } from '@/components/VipPaymentModal';
+import { CreditPackPaymentModal } from '@/components/CreditPackPaymentModal';
 
 interface PaywallModalProps {
     isOpen: boolean;
@@ -24,6 +25,7 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
     const [adError, setAdError] = useState<string | null>(null);
     const [showDevOption, setShowDevOption] = useState(false);
     const [showVipPayment, setShowVipPayment] = useState(false);
+    const [showCreditPack, setShowCreditPack] = useState<'small' | 'large' | null>(null);
 
     if (!isOpen) return null;
 
@@ -139,9 +141,7 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
                         <div className="grid grid-cols-2 gap-2">
                             {/* Small Pack: Rp 3.000 = 30 Credits */}
                             <button
-                                onClick={() => {/* TODO: Implement credit pack payment */
-                                    alert('Fitur beli credit pack coming soon!');
-                                }}
+                                onClick={() => setShowCreditPack('small')}
                                 className="p-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 transition"
                             >
                                 <div className="text-lg font-bold">30</div>
@@ -151,9 +151,7 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
 
                             {/* Large Pack: Rp 7.000 = 80 Credits */}
                             <button
-                                onClick={() => {/* TODO: Implement credit pack payment */
-                                    alert('Fitur beli credit pack coming soon!');
-                                }}
+                                onClick={() => setShowCreditPack('large')}
                                 className="p-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition"
                             >
                                 <div className="text-lg font-bold">80</div>
@@ -195,6 +193,19 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
                 onClose={() => setShowVipPayment(false)}
                 onSuccess={handleVipSuccess}
             />
+
+            {/* Credit Pack Payment Modal */}
+            {showCreditPack && (
+                <CreditPackPaymentModal
+                    isOpen={true}
+                    onClose={() => setShowCreditPack(null)}
+                    onSuccess={() => {
+                        setShowCreditPack(null);
+                        onSuccess();
+                    }}
+                    packType={showCreditPack}
+                />
+            )}
         </>
     );
 }
