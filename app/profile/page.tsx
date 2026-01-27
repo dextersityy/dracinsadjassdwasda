@@ -21,8 +21,8 @@ export default function ProfilePage() {
     const [mounted, setMounted] = useState(false);
     const [showVipPayment, setShowVipPayment] = useState(false);
     const [user, setUser] = useState<TelegramUser | null>(null);
-    const [showDebug, setShowDebug] = useState(false);
-    const [debugInfo, setDebugInfo] = useState<string>('');
+    const [showDebug, setShowDebug] = useState(true); // Default to true for debugging
+    const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
 
     useEffect(() => {
         setMounted(true);
@@ -109,8 +109,25 @@ export default function ProfilePage() {
     return (
         <>
             <div className="min-h-screen bg-[#0a0a0a] text-white pb-24">
+                {/* Debug Panel - Always visible at top */}
+                <div className="p-3 bg-gray-900 border-b border-gray-800">
+                    <button
+                        onClick={() => setShowDebug(!showDebug)}
+                        className="w-full text-center text-xs text-yellow-400 py-1 font-mono"
+                    >
+                        {showDebug ? '🔽 Hide Debug Info' : '🔼 Show Debug Info'}
+                    </button>
+
+                    {showDebug && (
+                        <div className="mt-2 p-3 rounded-lg bg-black border border-green-900 text-xs font-mono">
+                            <p className="text-green-400 mb-2 font-bold">📡 Telegram SDK Debug:</p>
+                            <pre className="text-green-300 whitespace-pre-wrap">{debugInfo}</pre>
+                        </div>
+                    )}
+                </div>
+
                 {/* Profile Header */}
-                <div className="relative pt-10 pb-6 px-6 bg-gradient-to-b from-gray-900 via-gray-900 to-[#0a0a0a] border-b border-white/5">
+                <div className="relative pt-6 pb-6 px-6 bg-gradient-to-b from-gray-900 via-gray-900 to-[#0a0a0a] border-b border-white/5">
                     <div className="flex items-center gap-4">
                         <div className="h-20 w-20 rounded-full bg-gradient-to-tr from-amber-500 to-pink-500 p-[2px]">
                             <div className="h-full w-full rounded-full bg-black flex items-center justify-center overflow-hidden">
@@ -191,23 +208,6 @@ export default function ProfilePage() {
                         <p className="text-gray-400 text-sm">1 Kredit = 10 Video</p>
                         <p className="text-gray-500 text-xs mt-1">Tonton iklan untuk dapat kredit gratis</p>
                     </div>
-                </div>
-
-                {/* Debug Panel Toggle */}
-                <div className="px-4 mt-4">
-                    <button
-                        onClick={() => setShowDebug(!showDebug)}
-                        className="w-full text-center text-xs text-gray-600 py-2"
-                    >
-                        {showDebug ? '[ Hide Debug Info ]' : '[ Show Debug Info ]'}
-                    </button>
-
-                    {showDebug && (
-                        <div className="mt-2 p-3 rounded-lg bg-gray-900 border border-gray-800 text-xs font-mono">
-                            <p className="text-green-400 mb-2">Telegram SDK Debug:</p>
-                            <pre className="text-gray-400 whitespace-pre-wrap">{debugInfo || 'Loading...'}</pre>
-                        </div>
-                    )}
                 </div>
             </div>
 
