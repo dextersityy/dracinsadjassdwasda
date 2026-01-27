@@ -34,7 +34,7 @@ export function DramaCard({ drama }: DramaCardProps) {
                     {drama.bookName}
                 </h3>
                 <p className="mt-1 text-[10px] text-gray-300 font-medium opacity-80">
-                    DramaBox Original
+                    DracinAja Original
                 </p>
             </div>
         </Link>

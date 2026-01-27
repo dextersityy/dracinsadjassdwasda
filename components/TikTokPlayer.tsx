@@ -225,7 +225,7 @@ export function TikTokPlayer({ episodes, dramaName, initialEpisodeIndex = 0, onC
                         {/* Sound/Music Row */}
                         <div className="flex items-center gap-2 text-white/80">
                             <Music2 size={14} className="animate-spin" style={{ animationDuration: '3s' }} />
-                            <p className="text-xs truncate">Original Sound - DramaBox</p>
+                            <p className="text-xs truncate">Original Sound - DracinAja</p>
                         </div>
 
                         {/* Episode Navigation Hint */}

@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useCredits } from '@/contexts/CreditContext';
+import { getUserId, recordVipTransaction } from '@/lib/user-service';
+import { processReferralCommission } from '@/contexts/ReferralContext';
 import { X, Crown, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
-import QRCode from 'qrcode';
 
 interface VipPaymentModalProps {
     isOpen: boolean;
@@ -18,11 +19,19 @@ interface QrisData {
     expiresAt: number;
 }
 
+// VIP Price for testing (Rp 100)
+const VIP_PRICE = 100;
+
+// Generate QR code URL using public API
+function generateQRUrl(data: string): string {
+    const encoded = encodeURIComponent(data);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encoded}`;
+}
+
 export function VipPaymentModal({ isOpen, onClose, onSuccess }: VipPaymentModalProps) {
-    const { activateVip } = useCredits();
+    const { activateVip, userId } = useCredits();
     const [step, setStep] = useState<'loading' | 'qris' | 'success' | 'error' | 'expired'>('loading');
     const [qrisData, setQrisData] = useState<QrisData | null>(null);
-    const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const pollingRef = useRef<NodeJS.Timeout | null>(null);
     const expiryRef = useRef<NodeJS.Timeout | null>(null);
@@ -41,15 +50,16 @@ export function VipPaymentModal({ isOpen, onClose, onSuccess }: VipPaymentModalP
     const createQris = async () => {
         setStep('loading');
         setError(null);
-        setQrImageUrl(null);
 
         try {
+            const currentUserId = userId || getUserId();
+
             const res = await fetch('/api/payment/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    amount: 10000,
-                    note: `VIP DramaBox - ${Date.now()}`,
+                    amount: VIP_PRICE,
+                    note: `VIP DracinAja - ${currentUserId} - ${Date.now()}`,
                 }),
             });
 
@@ -60,39 +70,38 @@ export function VipPaymentModal({ isOpen, onClose, onSuccess }: VipPaymentModalP
             }
 
             setQrisData(data);
-
-            // Generate QR code image from QRIS string
-            if (data.qrisString) {
-                const qrDataUrl = await QRCode.toDataURL(data.qrisString, {
-                    width: 300,
-                    margin: 2,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF',
-                    },
-                });
-                setQrImageUrl(qrDataUrl);
-            }
-
             setStep('qris');
 
+            // Record pending transaction to Firebase
+            try {
+                await recordVipTransaction(currentUserId, data.id, VIP_PRICE, 'pending');
+            } catch (err) {
+                console.warn('Failed to record pending transaction:', err);
+            }
+
             // Start polling for payment status
-            startPolling(data.id);
+            startPolling(data.id, currentUserId);
 
             // Set expiry timer (6 minutes)
-            expiryRef.current = setTimeout(() => {
+            expiryRef.current = setTimeout(async () => {
                 if (pollingRef.current) clearInterval(pollingRef.current);
                 setStep('expired');
+                // Update transaction status to expired
+                try {
+                    await recordVipTransaction(currentUserId, data.id, VIP_PRICE, 'expired');
+                } catch (err) {
+                    console.warn('Failed to update expired transaction:', err);
+                }
             }, 6 * 60 * 1000);
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Create QRIS error:', err);
-            setError(err.message);
+            setError(err instanceof Error ? err.message : 'Unknown error');
             setStep('error');
         }
     };
 
-    const startPolling = (transactionId: string) => {
+    const startPolling = (transactionId: string, currentUserId: string) => {
         // Poll every 3 seconds
         pollingRef.current = setInterval(async () => {
             try {
@@ -103,6 +112,21 @@ export function VipPaymentModal({ isOpen, onClose, onSuccess }: VipPaymentModalP
                     if (pollingRef.current) clearInterval(pollingRef.current);
                     if (expiryRef.current) clearTimeout(expiryRef.current);
                     setStep('success');
+
+                    // Record successful transaction to Firebase
+                    try {
+                        await recordVipTransaction(currentUserId, transactionId, VIP_PRICE, 'paid');
+                    } catch (err) {
+                        console.warn('Failed to record paid transaction:', err);
+                    }
+
+                    // Process referral commission (30% to referrer)
+                    try {
+                        await processReferralCommission(currentUserId);
+                    } catch (err) {
+                        console.warn('Failed to process referral commission:', err);
+                    }
+
                     activateVip();
 
                     // Auto close after success
@@ -112,6 +136,12 @@ export function VipPaymentModal({ isOpen, onClose, onSuccess }: VipPaymentModalP
                 } else if (data.expired === true) {
                     if (pollingRef.current) clearInterval(pollingRef.current);
                     setStep('expired');
+                    // Update transaction status
+                    try {
+                        await recordVipTransaction(currentUserId, transactionId, VIP_PRICE, 'expired');
+                    } catch (err) {
+                        console.warn('Failed to update expired transaction:', err);
+                    }
                 }
             } catch (err) {
                 console.warn('Polling error:', err);
@@ -126,6 +156,8 @@ export function VipPaymentModal({ isOpen, onClose, onSuccess }: VipPaymentModalP
     };
 
     if (!isOpen) return null;
+
+    const formattedPrice = new Intl.NumberFormat('id-ID').format(VIP_PRICE);
 
     return (
         <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4">
@@ -155,14 +187,21 @@ export function VipPaymentModal({ isOpen, onClose, onSuccess }: VipPaymentModalP
                             {/* Price */}
                             <div className="mb-4">
                                 <p className="text-gray-400 text-sm">Total Pembayaran</p>
-                                <p className="text-3xl font-bold text-white">Rp 10.000</p>
-                                <p className="text-xs text-gray-500 mt-1">VIP 1 Bulan</p>
+                                <p className="text-3xl font-bold text-white">Rp {formattedPrice}</p>
+                                <p className="text-xs text-gray-500 mt-1">VIP 1 Bulan (TEST)</p>
                             </div>
 
                             {/* QR Code */}
                             <div className="bg-white p-4 rounded-xl inline-block mb-4">
-                                {qrImageUrl ? (
-                                    <img src={qrImageUrl} alt="QRIS" className="w-48 h-48" />
+                                {qrisData.qrisString ? (
+                                    <img
+                                        src={generateQRUrl(qrisData.qrisString)}
+                                        alt="QRIS"
+                                        className="w-48 h-48"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = '/placeholder-qr.png';
+                                        }}
+                                    />
                                 ) : (
                                     <div className="w-48 h-48 flex items-center justify-center bg-gray-100">
                                         <Loader2 className="animate-spin text-gray-400" size={40} />
@@ -176,7 +215,7 @@ export function VipPaymentModal({ isOpen, onClose, onSuccess }: VipPaymentModalP
                                 <ol className="text-gray-400 space-y-1 list-decimal list-inside">
                                     <li>Buka aplikasi e-wallet atau m-banking</li>
                                     <li>Scan QR code di atas</li>
-                                    <li>Konfirmasi pembayaran Rp 10.000</li>
+                                    <li>Konfirmasi pembayaran Rp {formattedPrice}</li>
                                     <li>Tunggu verifikasi otomatis</li>
                                 </ol>
                             </div>

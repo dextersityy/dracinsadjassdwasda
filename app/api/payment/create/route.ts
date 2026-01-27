@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
             },
             body: JSON.stringify({
                 amount: amount || 10000,
-                note: note || `VIP DramaBox - ${Date.now()}`,
+                note: note || `VIP DracinAja - ${Date.now()}`,
             }),
         });
 

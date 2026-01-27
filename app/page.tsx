@@ -48,7 +48,7 @@ export default async function Home() {
               </h2>
             </Link>
             <p className="text-xs md:text-sm text-gray-300 mt-2 line-clamp-2 max-w-md">
-              {heroDrama.introduction || "Experience the most captivating stories, only on DramaBox."}
+              {heroDrama.introduction || "Experience the most captivating stories, only on DracinAja."}
             </p>
           </div>
         </div>

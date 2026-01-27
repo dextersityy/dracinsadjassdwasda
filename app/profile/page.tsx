@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { User, Sparkles, Settings, ChevronRight, Copy, Crown, Tv } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { User, Sparkles, Settings, ChevronRight, Copy, Crown, Tv, Users } from 'lucide-react';
 import clsx from 'clsx';
 import { useCredits } from '@/contexts/CreditContext';
 import { VipPaymentModal } from '@/components/VipPaymentModal';
 
 export default function ProfilePage() {
+    const router = useRouter();
     const { credits, videosWatched, isVip, vipExpiry, activateVip } = useCredits();
     const [mounted, setMounted] = useState(false);
     const [showVipPayment, setShowVipPayment] = useState(false);
@@ -31,6 +33,14 @@ export default function ProfilePage() {
 
     const handleVipSuccess = () => {
         setShowVipPayment(false);
+    };
+
+    const goToSettings = () => {
+        router.push('/settings');
+    };
+
+    const goToReferral = () => {
+        router.push('/referral');
     };
 
     if (!mounted) return null;
@@ -110,8 +120,8 @@ export default function ProfilePage() {
                 {/* Menu Options */}
                 <div className="px-4 py-2 space-y-3">
                     <MenuItem icon={Crown} label="Beli VIP" subLabel="Unlimited • Rp 10.000/bulan" highlight onClick={handleBuyVip} />
-                    <MenuItem icon={User} label="Program Referral" subLabel="Ajak teman, dapat kredit" />
-                    <MenuItem icon={Settings} label="Pengaturan" />
+                    <MenuItem icon={Users} label="Program Referral" subLabel="Ajak teman, dapat komisi 30%" onClick={goToReferral} />
+                    <MenuItem icon={Settings} label="Pengaturan" onClick={goToSettings} />
                 </div>
 
                 {/* Credit Info */}

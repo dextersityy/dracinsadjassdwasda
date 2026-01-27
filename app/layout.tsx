@@ -1,4 +1,6 @@
 import { CreditProvider } from '@/contexts/CreditContext';
+import { SettingsProvider } from '@/contexts/SettingsContext';
+import { ReferralProvider } from '@/contexts/ReferralContext';
 import { BottomNav } from '@/components/BottomNav';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -8,8 +10,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'DramaBox Mini',
-  description: 'Stream your favorite mini-dramas',
+  title: 'DracinAja',
+  description: 'Nonton drama favoritmu',
 };
 
 export default function RootLayout({
@@ -18,8 +20,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark">
       <head>
+        {/* Telegram WebApp SDK - Must load first */}
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
         {/* Monetag SDK */}
         <Script
           src="//libtl.com/sdk.js"
@@ -29,10 +36,14 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <CreditProvider>
-          {children}
-          <BottomNav />
-        </CreditProvider>
+        <SettingsProvider>
+          <CreditProvider>
+            <ReferralProvider>
+              {children}
+              <BottomNav />
+            </ReferralProvider>
+          </CreditProvider>
+        </SettingsProvider>
       </body>
     </html>
   );

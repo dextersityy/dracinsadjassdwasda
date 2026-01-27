@@ -99,7 +99,7 @@ export function VideoPlayer({ episode, userId, onUnlock }: VideoPlayerProps) {
                 <video
                     ref={videoRef}
                     src={episode.videoUrl}
-                    poster="https://via.placeholder.com/640x360/000000/FFFFFF?text=DramaBox+Player"
+                    poster="https://via.placeholder.com/640x360/000000/FFFFFF?text=DracinAja+Player"
                     controls
                     autoPlay
                     playsInline
