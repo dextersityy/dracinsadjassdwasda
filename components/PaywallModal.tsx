@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useCredits } from '@/contexts/CreditContext';
 import { Play, Crown, Tv, Zap, X, AlertCircle } from 'lucide-react';
 import { VipPaymentModal } from '@/components/VipPaymentModal';
-import createAdHandler from 'monetag-tg-sdk';
 
 interface PaywallModalProps {
     isOpen: boolean;
@@ -12,9 +11,12 @@ interface PaywallModalProps {
     onSuccess: () => void;
 }
 
-// Create ad handler with your zone ID
-const ZONE_ID = 10522796;
-const showRewardedAd = createAdHandler(ZONE_ID);
+// Declare Monetag SDK function from script tag
+declare global {
+    interface Window {
+        show_10522796?: () => Promise<void>;
+    }
+}
 
 export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) {
     const { addCredits, credits, videosWatched } = useCredits();
@@ -30,9 +32,13 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
         setAdError(null);
 
         try {
-            // Show the rewarded ad using npm package
+            // Check if Monetag SDK is loaded from script tag
+            if (typeof window.show_10522796 !== 'function') {
+                throw new Error('SDK not loaded');
+            }
+
             console.log('[Monetag] Showing ad...');
-            await showRewardedAd();
+            await window.show_10522796();
 
             // User completed ad - reward 10 credits
             console.log('[Monetag] Ad completed, rewarding user');
