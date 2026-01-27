@@ -26,17 +26,54 @@ export default function ProfilePage() {
         setMounted(true);
 
         // Read user data from Telegram WebApp SDK
-        const telegram = (window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: TelegramUser } } } }).Telegram;
-        if (telegram?.WebApp?.initDataUnsafe?.user) {
-            setUser(telegram.WebApp.initDataUnsafe.user);
-        } else {
-            // Fallback for testing in browser (not in Telegram)
-            setUser({
-                id: 0,
-                first_name: "Guest",
-                last_name: "User",
-            });
-        }
+        const initTelegram = () => {
+            const telegram = (window as unknown as {
+                Telegram?: {
+                    WebApp?: {
+                        ready: () => void;
+                        initDataUnsafe?: { user?: TelegramUser };
+                        initData?: string;
+                    }
+                }
+            }).Telegram;
+
+            if (telegram?.WebApp) {
+                // Call ready() to notify Telegram the app is ready
+                telegram.WebApp.ready();
+
+                // Check if user data is available
+                if (telegram.WebApp.initDataUnsafe?.user) {
+                    setUser(telegram.WebApp.initDataUnsafe.user);
+                    console.log('[Profile] Telegram user loaded:', telegram.WebApp.initDataUnsafe.user);
+                } else if (telegram.WebApp.initData) {
+                    // initData exists but user not parsed - try to parse
+                    console.log('[Profile] initData exists but no user object');
+                    setUser({
+                        id: 0,
+                        first_name: "Telegram",
+                        last_name: "User",
+                    });
+                } else {
+                    console.log('[Profile] No telegram user data available');
+                    setUser({
+                        id: 0,
+                        first_name: "Guest",
+                        last_name: "User",
+                    });
+                }
+            } else {
+                // Not in Telegram - fallback
+                console.log('[Profile] Not in Telegram WebApp');
+                setUser({
+                    id: 0,
+                    first_name: "Guest",
+                    last_name: "User",
+                });
+            }
+        };
+
+        // Small delay to ensure SDK is loaded
+        setTimeout(initTelegram, 100);
     }, []);
 
     const remainingVideos = credits * 10 - videosWatched;
