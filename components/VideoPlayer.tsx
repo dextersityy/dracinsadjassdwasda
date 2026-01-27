@@ -15,7 +15,6 @@ interface VideoPlayerProps {
 export function VideoPlayer({ episode, userId, onUnlock }: VideoPlayerProps) {
     const [access, setAccess] = useState<'pending' | 'granted' | 'denied'>('pending');
     const [showPaywall, setShowPaywall] = useState(false);
-    const [loadingAd, setLoadingAd] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
 
     // Check access when episode changes
@@ -61,29 +60,6 @@ export function VideoPlayer({ episode, userId, onUnlock }: VideoPlayerProps) {
         return () => { mounted = false; };
     }, [episode, userId, onUnlock]);
 
-    const handleWatchAd = async () => {
-        setLoadingAd(true);
-        // Simulate Monetag Ad Interaction
-        // In real implementation: window.monetag.show() -> callback
-        setTimeout(async () => {
-            try {
-                await apiClient.verifyAd(userId, 'mock-token');
-                setLoadingAd(false);
-                setShowPaywall(false);
-                // Re-check access
-                const result = await apiClient.checkAccess(userId);
-                if (result.allowed) {
-                    setAccess('granted');
-                    if (onUnlock) onUnlock();
-                } else {
-                    alert("Something went wrong. Please try again.");
-                }
-            } catch (e) {
-                setLoadingAd(false);
-                alert("Ad verification failed.");
-            }
-        }, 3000); // 3 seconds mock ad
-    };
 
     if (access === 'pending') {
         return (
@@ -119,8 +95,19 @@ export function VideoPlayer({ episode, userId, onUnlock }: VideoPlayerProps) {
             <PaywallModal
                 isOpen={showPaywall}
                 onClose={() => setShowPaywall(false)} // Optional: Go back?
-                onWatchAd={handleWatchAd}
-                loadingAd={loadingAd}
+                onSuccess={async () => {
+                    setShowPaywall(false);
+                    // Re-check access after successful ad/VIP
+                    try {
+                        const result = await apiClient.checkAccess(userId);
+                        if (result.allowed) {
+                            setAccess('granted');
+                            if (onUnlock) onUnlock();
+                        }
+                    } catch (e) {
+                        console.error("Re-check access failed", e);
+                    }
+                }}
             />
         </div>
     );
