@@ -137,7 +137,7 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
 
                         {/* Credit Pack Options */}
                         <div className="grid grid-cols-2 gap-2">
-                            {/* Small Pack: Rp 100 = 30 Credits (Test Price) */}
+                            {/* Small Pack: Rp 3.000 = 30 Credits */}
                             <button
                                 onClick={() => {/* TODO: Implement credit pack payment */
                                     alert('Fitur beli credit pack coming soon!');
@@ -146,10 +146,10 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
                             >
                                 <div className="text-lg font-bold">30</div>
                                 <div className="text-xs opacity-80">Kredit</div>
-                                <div className="text-sm font-bold mt-1">Rp 100</div>
+                                <div className="text-sm font-bold mt-1">Rp 3.000</div>
                             </button>
 
-                            {/* Large Pack: Rp 100 = 80 Credits (Test Price) */}
+                            {/* Large Pack: Rp 7.000 = 80 Credits */}
                             <button
                                 onClick={() => {/* TODO: Implement credit pack payment */
                                     alert('Fitur beli credit pack coming soon!');
@@ -158,7 +158,7 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
                             >
                                 <div className="text-lg font-bold">80</div>
                                 <div className="text-xs opacity-80">Kredit</div>
-                                <div className="text-sm font-bold mt-1">Rp 100</div>
+                                <div className="text-sm font-bold mt-1">Rp 7.000</div>
                                 <div className="text-[10px] text-green-300">HEMAT!</div>
                             </button>
                         </div>
@@ -176,7 +176,7 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
                             </div>
                             <div className="flex-1 text-left">
                                 <h3 className="font-bold">Beli VIP</h3>
-                                <p className="text-sm text-amber-900">Unlimited • Rp 100 (Test)</p>
+                                <p className="text-sm text-amber-900">Unlimited • Rp 10.000/bulan</p>
                             </div>
                         </button>
 

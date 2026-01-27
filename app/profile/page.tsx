@@ -182,7 +182,7 @@ export default function ProfilePage() {
 
                 {/* Menu Options */}
                 <div className="px-4 py-2 space-y-3">
-                    <MenuItem icon={Crown} label="Beli VIP" subLabel="Unlimited • Rp 100 (Test)" highlight onClick={handleBuyVip} />
+                    <MenuItem icon={Crown} label="Beli VIP" subLabel="Unlimited • Rp 10.000/bulan" highlight onClick={handleBuyVip} />
                     <MenuItem icon={Users} label="Program Referral" subLabel="Ajak teman, dapat komisi 30%" onClick={goToReferral} />
                     <MenuItem icon={Settings} label="Pengaturan" onClick={goToSettings} />
                 </div>

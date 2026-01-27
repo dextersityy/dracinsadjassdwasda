@@ -19,8 +19,8 @@ interface QrisData {
     expiresAt: number;
 }
 
-// VIP Price for testing (Rp 100)
-const VIP_PRICE = 100;
+// VIP Price (Rp 10.000)
+const VIP_PRICE = 10000;
 
 // Generate QR code URL using public API
 function generateQRUrl(data: string): string {
