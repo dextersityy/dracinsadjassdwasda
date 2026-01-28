@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, User } from 'lucide-react';
+import { Home, User, Flame } from 'lucide-react';
 import clsx from 'clsx';
 
 export function BottomNav() {
@@ -10,6 +10,7 @@ export function BottomNav() {
 
     const navItems = [
         { href: '/', icon: Home, label: 'Home' },
+        { href: '/trending', icon: Flame, label: 'Trending' },
         { href: '/profile', icon: User, label: 'Profile' },
     ];
 

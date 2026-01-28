@@ -157,7 +157,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="font-medium">DracinAja</p>
-                            <p className="text-sm text-gray-500">Versi 1.0.0</p>
+                            <p className="text-sm text-gray-500">Versi 1.0.1</p>
                         </div>
                         {isVip && (
                             <span className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-black text-sm font-bold">

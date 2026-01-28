@@ -17,7 +17,6 @@ export function HorizontalScrollList({ title, dramas }: HorizontalScrollListProp
                     <span className="w-1 h-5 bg-amber-500 rounded-full" />
                     {title}
                 </h2>
-                <span className="text-xs text-amber-500/80 font-medium">View All</span>
             </div>
 
             <div className="flex overflow-x-auto gap-3 px-4 pb-4 snap-x snap-mandatory hide-scrollbar">

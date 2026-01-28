@@ -29,7 +29,7 @@ interface ReferralContextType {
     isLoading: boolean;
     applyReferralCode: (code: string) => Promise<{ success: boolean; message: string }>;
     getReferralLink: () => string;
-    requestWithdrawal: (amount: number) => Promise<{ success: boolean; message: string }>;
+    requestWithdrawal: (amount: number, paymentDetails: { bankName: string; accountNumber: string; accountHolder: string }) => Promise<{ success: boolean; message: string }>;
 }
 
 const ReferralContext = createContext<ReferralContextType | null>(null);
@@ -193,7 +193,7 @@ export function ReferralProvider({ children }: ReferralProviderProps) {
     }, [referralCode]);
 
     // Request withdrawal of pending earnings
-    const requestWithdrawal = useCallback(async (amount: number): Promise<{ success: boolean; message: string }> => {
+    const requestWithdrawal = useCallback(async (amount: number, paymentDetails: { bankName: string; accountNumber: string; accountHolder: string }): Promise<{ success: boolean; message: string }> => {
         if (!userId) {
             return { success: false, message: 'User tidak ditemukan' };
         }
@@ -207,11 +207,27 @@ export function ReferralProvider({ children }: ReferralProviderProps) {
         }
 
         try {
+            // Get latest user data for the request
+            const userDocRef = doc(db, 'users', userId);
+            const userDocSnap = await getDoc(userDocRef);
+
+            let username = 'User';
+            let email = '';
+
+            if (userDocSnap.exists()) {
+                const userData = userDocSnap.data();
+                username = userData.username || userData.displayName || 'User';
+                email = userData.email || '';
+            }
+
             // Create withdrawal request document
             const withdrawalRef = doc(collection(db, 'withdrawal_requests'));
             await setDoc(withdrawalRef, {
                 userId,
+                username, // Added for admin tracking
+                email,    // Added for admin tracking
                 amount,
+                paymentDetails, // Bank details
                 status: 'pending',
                 createdAt: serverTimestamp(),
             });
@@ -264,35 +280,30 @@ export async function processReferralCommission(buyerUserId: string): Promise<vo
         const referrerId = buyerReferralSnap.data().referredBy;
         if (!referrerId) return; // No referrer
 
-        // Check if this is the buyer's first VIP purchase (anti-abuse)
-        const purchaseTrackRef = doc(db, 'referral_purchases', `${buyerUserId}_first_vip`);
-        const purchaseTrackSnap = await getDoc(purchaseTrackRef);
-
-        if (purchaseTrackSnap.exists()) {
-            // Already credited commission for this user's first purchase
-            console.log('Commission already credited for this user');
-            return;
-        }
-
         // Credit commission to referrer
         const referrerRef = doc(db, 'referrals', referrerId);
         await updateDoc(referrerRef, {
-            totalReferrals: increment(1),
+            // totalReferrals: increment(1), // totalUsers referred count (unique) should probably only increment once, but here we are counting transactions. 
+            // Better logic: totalReferrals stays count of users. totalEarnings increases.
+            // If you want to count successful conversions, maybe keep it. But usually totalReferrals is user count.
+            // Let's increment earnings primarily.
             pendingEarnings: increment(COMMISSION_AMOUNT),
             totalEarnings: increment(COMMISSION_AMOUNT),
         });
 
-        // Record the referral transaction
+        // Record the referral transaction using a unique ID for this specific purchase
         const transactionRef = doc(collection(db, 'referral_transactions'));
         await setDoc(transactionRef, {
             referrerId,
             referredUserId: buyerUserId,
             commission: COMMISSION_AMOUNT,
             status: 'pending',
+            type: 'VIP_PURCHASE',
             createdAt: serverTimestamp(),
         });
 
-        // Mark first purchase as processed (anti-abuse)
+        // Optional: We can still track individual purchases if we want history
+        const purchaseTrackRef = doc(db, 'referral_purchases', `${buyerUserId}_vip_${Date.now()}`);
         await setDoc(purchaseTrackRef, {
             processed: true,
             processedAt: serverTimestamp(),

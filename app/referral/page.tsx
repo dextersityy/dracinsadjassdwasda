@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Users, Copy, Check, Wallet, Clock, ArrowRight, Banknote } from 'lucide-react';
 import { useReferral } from '@/contexts/ReferralContext';
 import { useCredits } from '@/contexts/CreditContext';
+import { WITHDRAWAL_METHODS } from '@/lib/constants';
 
 export default function ReferralPage() {
     const { totalReferrals, totalEarnings, pendingEarnings, getReferralLink, requestWithdrawal, isLoading } = useReferral();
@@ -12,6 +13,11 @@ export default function ReferralPage() {
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [withdrawing, setWithdrawing] = useState(false);
     const [withdrawResult, setWithdrawResult] = useState<{ success: boolean; message: string } | null>(null);
+
+    // Form States
+    const [selectedBank, setSelectedBank] = useState('');
+    const [accountNumber, setAccountNumber] = useState('');
+    const [accountHolder, setAccountHolder] = useState('');
 
     const handleCopyLink = async () => {
         try {
@@ -29,14 +35,27 @@ export default function ReferralPage() {
             return;
         }
 
+        if (!selectedBank || !accountNumber || !accountHolder) {
+            setWithdrawResult({ success: false, message: 'Mohon lengkapi detail pembayaran' });
+            return;
+        }
+
         setWithdrawing(true);
         try {
-            const result = await requestWithdrawal(pendingEarnings);
+            const result = await requestWithdrawal(pendingEarnings, {
+                bankName: selectedBank,
+                accountNumber,
+                accountHolder
+            });
             setWithdrawResult(result);
             if (result.success) {
                 setTimeout(() => {
                     setShowWithdrawModal(false);
                     setWithdrawResult(null);
+                    // Reset form
+                    setSelectedBank('');
+                    setAccountNumber('');
+                    setAccountHolder('');
                 }, 2000);
             }
         } catch (err) {
@@ -192,16 +211,51 @@ export default function ReferralPage() {
                             </p>
                         </div>
 
-                        <div className="bg-amber-500/10 rounded-xl p-3 mb-4 border border-amber-500/20">
-                            <p className="text-xs text-amber-200">
-                                ⚠️ Penarikan akan diproses dalam 1-3 hari kerja. Hubungi admin untuk konfirmasi rekening tujuan.
-                            </p>
+                        {/* Payment Method Selector */}
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">Metode Penarikan</label>
+                                <select
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none appearance-none"
+                                    value={selectedBank}
+                                    onChange={(e) => setSelectedBank(e.target.value)}
+                                >
+                                    <option value="">Pilih Bank / E-Wallet</option>
+                                    {WITHDRAWAL_METHODS.map((method) => (
+                                        <option key={method.id} value={method.name}>
+                                            {method.name} ({method.type})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">Nomor Rekening / HP</label>
+                                <input
+                                    type="number"
+                                    placeholder="Contoh: 08123456789"
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none"
+                                    value={accountNumber}
+                                    onChange={(e) => setAccountNumber(e.target.value)}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1">Nama Pemilik Akun</label>
+                                <input
+                                    type="text"
+                                    placeholder="Contoh: Budi Santoso"
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-amber-500 outline-none"
+                                    value={accountHolder}
+                                    onChange={(e) => setAccountHolder(e.target.value)}
+                                />
+                            </div>
                         </div>
 
                         {withdrawResult && (
                             <div className={`rounded-xl p-3 mb-4 ${withdrawResult.success
-                                    ? 'bg-green-500/10 border border-green-500/20 text-green-400'
-                                    : 'bg-red-500/10 border border-red-500/20 text-red-400'
+                                ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+                                : 'bg-red-500/10 border border-red-500/20 text-red-400'
                                 }`}>
                                 <p className="text-sm">{withdrawResult.message}</p>
                             </div>
@@ -219,7 +273,7 @@ export default function ReferralPage() {
                             </button>
                             <button
                                 onClick={handleWithdraw}
-                                disabled={withdrawing || pendingEarnings < 10000}
+                                disabled={withdrawing || pendingEarnings < 10000 || !selectedBank || !accountNumber || !accountHolder}
                                 className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-black font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition"
                             >
                                 {withdrawing ? 'Memproses...' : 'Konfirmasi'}

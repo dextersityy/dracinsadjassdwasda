@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Sparkles, Settings, ChevronRight, Copy, Crown, Tv, Users, Coins, X } from 'lucide-react';
+import { User, Sparkles, Settings, ChevronRight, Copy, Crown, Tv, Users, Coins, X, FileText } from 'lucide-react';
 import clsx from 'clsx';
 import { useCredits } from '@/contexts/CreditContext';
 import { VipPaymentModal } from '@/components/VipPaymentModal';
@@ -187,6 +187,7 @@ export default function ProfilePage() {
                     <MenuItem icon={Crown} label="Beli VIP" subLabel="Unlimited • Rp 10.000/bulan" highlight onClick={handleBuyVip} />
                     <MenuItem icon={Coins} label="Beli Kredit" subLabel="30 kredit Rp 3.000 • 80 kredit Rp 7.000" onClick={() => setShowCreditSelector(true)} />
                     <MenuItem icon={Users} label="Program Referral" subLabel="Ajak teman, dapat komisi 30%" onClick={goToReferral} />
+                    <MenuItem icon={FileText} label="Update Log" subLabel="Riwayat pembaruan aplikasi" onClick={() => router.push('/profile/update-log')} />
                     <MenuItem icon={Settings} label="Pengaturan" onClick={goToSettings} />
                 </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
 import { Users, Crown, Wallet, TrendingUp, RefreshCw, AlertCircle, ArrowUpRight, Check, X } from 'lucide-react';
+import { approveWithdrawal } from './actions';
 
 // Admin user IDs - Ganti dengan ID user kamu yang asli
 const ADMIN_IDS = [
@@ -135,13 +136,25 @@ export default function AdminPage() {
         }
     };
 
+
+
+    // ... imports
+
     const handleWithdrawalAction = async (id: string, action: 'paid' | 'rejected') => {
         if (!confirm(`Yakin ingin ${action === 'paid' ? 'menyetujui' : 'menolak'} penarikan ini?`)) return;
 
         try {
-            await updateDoc(doc(db, 'withdrawal_requests', id), {
-                status: action
-            });
+            if (action === 'paid') {
+                const result = await approveWithdrawal(id);
+                if (!result.success) {
+                    alert(result.message);
+                    return;
+                }
+            } else {
+                await updateDoc(doc(db, 'withdrawal_requests', id), {
+                    status: action
+                });
+            }
 
             // Reload data
             loadStats();

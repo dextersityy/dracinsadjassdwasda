@@ -25,6 +25,7 @@ export interface Drama {
     introduction?: string;
     tags?: string[];
     protagonist?: string;
+    source?: 'dramabox' | 'reelshort';
 }
 
 export interface Episode {

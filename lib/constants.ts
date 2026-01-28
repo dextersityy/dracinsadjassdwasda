@@ -1,0 +1,15 @@
+export const WITHDRAWAL_METHODS = [
+    { id: 'dana', name: 'DANA', type: 'E-Wallet' },
+    { id: 'ovo', name: 'OVO', type: 'E-Wallet' },
+    { id: 'gopay', name: 'GoPay', type: 'E-Wallet' },
+    { id: 'shopeepay', name: 'ShopeePay', type: 'E-Wallet' },
+    { id: 'linkaja', name: 'LinkAja', type: 'E-Wallet' },
+    { id: 'bca', name: 'Bank BCA', type: 'Bank' },
+    { id: 'mandiri', name: 'Bank Mandiri', type: 'Bank' },
+    { id: 'bri', name: 'Bank BRI', type: 'Bank' },
+    { id: 'bni', name: 'Bank BNI', type: 'Bank' },
+    { id: 'cimb', name: 'Bank CIMB Niaga', type: 'Bank' },
+    { id: 'jago', name: 'Bank Jago', type: 'Bank' },
+    { id: 'seabank', name: 'SeaBank', type: 'Bank' },
+    { id: 'neobank', name: 'Neo Bank', type: 'Bank' },
+];
