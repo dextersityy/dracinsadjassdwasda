@@ -174,14 +174,13 @@ export function CreditProvider({ children }: CreditProviderProps) {
     };
 
     // Consume a video view
+    // Consume a video view
     const consumeVideo = (): boolean => {
         if (isVip) return true;
 
-        const videosPerCredit = 10;
-        const totalAllowedVideos = credits * videosPerCredit;
-
-        if (videosWatched < totalAllowedVideos) {
-            setVideosWatched(prev => prev + 1);
+        if (credits > 0) {
+            setCredits(prev => Math.max(0, prev - 1));
+            setVideosWatched(prev => prev + 1); // Keep tracking total watched for stats
             return true;
         }
 

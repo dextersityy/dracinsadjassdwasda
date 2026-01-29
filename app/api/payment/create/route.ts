@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const QOUPAY_API_KEY = 'p7HG0qRualY4_XH9yyiVnAoygSE_d9Xw';
-const QOUPAY_BASE_URL = 'https://payment.qoupaypremium.web.id';
+const QOUPAY_API_KEY = process.env.QOUPAY_API_KEY!;
+const QOUPAY_BASE_URL = process.env.QOUPAY_BASE_URL || 'https://payment.qoupaypremium.web.id';
 
 export async function POST(request: NextRequest) {
     try {
@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Qoupay API error:', response.status, errorText);
-            throw new Error(`Qoupay error: ${response.status}`);
+            // Include upstream error details in the thrown error
+            throw new Error(`Qoupay error: ${response.status} - ${errorText}`);
         }
 
         const qrisData = await response.json();

@@ -12,10 +12,14 @@ interface PaywallModalProps {
     onSuccess: () => void;
 }
 
-// Declare Monetag SDK function from script tag
+// Declare Adsgram SDK (sad.min.js)
 declare global {
     interface Window {
-        show_10522796?: () => Promise<void>;
+        Adsgram?: {
+            init: (config: { blockId: string; debug?: boolean }) => {
+                show: () => Promise<{ done: boolean; description: string; state: string }>;
+            };
+        };
     }
 }
 
@@ -23,7 +27,6 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
     const { addCredits, credits, videosWatched } = useCredits();
     const [isLoadingAd, setIsLoadingAd] = useState(false);
     const [adError, setAdError] = useState<string | null>(null);
-    const [showDevOption, setShowDevOption] = useState(false);
     const [showVipPayment, setShowVipPayment] = useState(false);
     const [showCreditPack, setShowCreditPack] = useState<'small' | 'large' | null>(null);
 
@@ -34,40 +37,40 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
         setAdError(null);
 
         try {
-            // Check if Monetag SDK is loaded from script tag
-            if (typeof window.show_10522796 !== 'function') {
+            // Check if Adsgram AdController (sad.min.js) is available
+            if (!window.Adsgram) {
                 throw new Error('SDK not loaded');
             }
 
-            console.log('[Monetag] Showing ad...');
-            await window.show_10522796();
+            console.log('[Adsgram] Initializing ad...');
+            const AdController = window.Adsgram.init({ blockId: "21980" });
 
-            // User completed ad - reward 3 credits
-            console.log('[Monetag] Ad completed, rewarding user');
-            addCredits(3);
-            onSuccess();
+            console.log('[Adsgram] Showing ad...');
+            const result = await AdController.show();
+
+            if (result.done) {
+                // User completed ad - reward 3 credits
+                console.log('[Adsgram] Ad completed, rewarding user');
+                addCredits(3);
+                onSuccess();
+            } else {
+                // User closed ad early or it failed
+                // result.state can be 'error', 'skipped', etc.
+                throw new Error(result.description || `Ad ${result.state}`);
+            }
         } catch (error: any) {
             console.warn('Ad failed or skipped:', error);
-
-            // Show dev fallback option
-            setShowDevOption(true);
 
             if (error.message?.includes('Network')) {
                 setAdError('Koneksi gagal. Pastikan tidak ada ad blocker aktif.');
             } else if (error.message?.includes('timeout') || error.message?.includes('unavailable')) {
                 setAdError('Iklan tidak tersedia. Coba lagi nanti.');
             } else {
-                setAdError('Iklan tidak tersedia atau user menutup iklan.');
+                setAdError('Iklan tidak tersedia atau kamu menutup iklan sebelum selesai.');
             }
         } finally {
             setIsLoadingAd(false);
         }
-    };
-
-    // Development fallback - give free credits
-    const handleDevReward = () => {
-        addCredits(3);
-        onSuccess();
     };
 
     const handleBuyVip = () => {
@@ -118,22 +121,13 @@ export function PaywallModal({ isOpen, onClose, onSuccess }: PaywallModalProps) 
                             <Zap size={20} className="text-yellow-300" />
                         </button>
 
-                        {/* Error Message & Dev Fallback */}
+                        {/* Error Message */}
                         {adError && (
                             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                                 <div className="flex items-start gap-2 text-red-400 text-xs">
                                     <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
                                     <p>{adError}</p>
                                 </div>
-
-                                {showDevOption && (
-                                    <button
-                                        onClick={handleDevReward}
-                                        className="w-full mt-3 py-2 rounded-lg bg-gray-800 text-gray-300 text-xs hover:bg-gray-700 transition"
-                                    >
-                                        🔧 Dev Mode: Dapatkan Kredit Gratis
-                                    </button>
-                                )}
                             </div>
                         )}
 

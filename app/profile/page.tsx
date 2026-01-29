@@ -36,7 +36,7 @@ declare global {
 
 export default function ProfilePage() {
     const router = useRouter();
-    const { credits, videosWatched, isVip, vipExpiry, activateVip } = useCredits();
+    const { credits, videosWatched, isVip, vipExpiry, activateVip, userId } = useCredits();
     const [mounted, setMounted] = useState(false);
     const [showVipPayment, setShowVipPayment] = useState(false);
     const [user, setUser] = useState<TelegramUser | null>(null);
@@ -90,7 +90,7 @@ export default function ProfilePage() {
         setTimeout(initTelegram, 1000);
     }, []);
 
-    const remainingVideos = credits - videosWatched;
+    const remainingVideos = credits;
 
     const handleBuyVip = () => {
         setShowVipPayment(true);
@@ -128,8 +128,20 @@ export default function ProfilePage() {
                         <div className="flex-1">
                             <h1 className="text-xl font-bold">{user.first_name} {user.last_name || ''}</h1>
                             <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                                <span>ID: {user.id}</span>
-                                <Copy size={12} className="cursor-pointer hover:text-white" />
+                                <span>TG: {user.id}</span>
+                                <Copy
+                                    size={12}
+                                    className="cursor-pointer hover:text-white"
+                                    onClick={() => navigator.clipboard.writeText(user.id.toString())}
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
+                                <span>UID: {userId || '...'}</span>
+                                <Copy
+                                    size={10}
+                                    className="cursor-pointer hover:text-white"
+                                    onClick={() => userId && navigator.clipboard.writeText(userId)}
+                                />
                             </div>
 
                             <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/5 text-xs font-medium">
@@ -198,61 +210,66 @@ export default function ProfilePage() {
                         <p className="text-gray-500 text-xs mt-1">Tonton iklan untuk dapat kredit gratis</p>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* VIP Payment Modal */}
-            <VipPaymentModal
+            < VipPaymentModal
                 isOpen={showVipPayment}
-                onClose={() => setShowVipPayment(false)}
+                onClose={() => setShowVipPayment(false)
+                }
                 onSuccess={handleVipSuccess}
             />
 
             {/* Credit Selector Modal */}
-            {showCreditSelector && (
-                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-sm bg-gray-900 rounded-2xl border border-white/10 overflow-hidden">
-                        <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                            <h3 className="font-bold text-white">Pilih Paket Kredit</h3>
-                            <button onClick={() => setShowCreditSelector(false)} className="text-gray-400">
-                                <X size={24} />
-                            </button>
-                        </div>
-                        <div className="p-4 space-y-3">
-                            <button
-                                onClick={() => { setShowCreditSelector(false); setSelectedPack('small'); }}
-                                className="w-full p-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 transition flex items-center justify-between"
-                            >
-                                <div className="text-left">
-                                    <div className="text-lg font-bold">30 Kredit</div>
-                                    <div className="text-xs opacity-80">Paket Hemat</div>
-                                </div>
-                                <div className="text-xl font-bold">Rp 3.000</div>
-                            </button>
+            {
+                showCreditSelector && (
+                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="w-full max-w-sm bg-gray-900 rounded-2xl border border-white/10 overflow-hidden">
+                            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                                <h3 className="font-bold text-white">Pilih Paket Kredit</h3>
+                                <button onClick={() => setShowCreditSelector(false)} className="text-gray-400">
+                                    <X size={24} />
+                                </button>
+                            </div>
+                            <div className="p-4 space-y-3">
+                                <button
+                                    onClick={() => { setShowCreditSelector(false); setSelectedPack('small'); }}
+                                    className="w-full p-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 transition flex items-center justify-between"
+                                >
+                                    <div className="text-left">
+                                        <div className="text-lg font-bold">30 Kredit</div>
+                                        <div className="text-xs opacity-80">Paket Hemat</div>
+                                    </div>
+                                    <div className="text-xl font-bold">Rp 3.000</div>
+                                </button>
 
-                            <button
-                                onClick={() => { setShowCreditSelector(false); setSelectedPack('large'); }}
-                                className="w-full p-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition flex items-center justify-between"
-                            >
-                                <div className="text-left">
-                                    <div className="text-lg font-bold">80 Kredit</div>
-                                    <div className="text-xs opacity-80">Paket Super</div>
-                                </div>
-                                <div className="text-xl font-bold">Rp 7.000</div>
-                            </button>
+                                <button
+                                    onClick={() => { setShowCreditSelector(false); setSelectedPack('large'); }}
+                                    className="w-full p-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition flex items-center justify-between"
+                                >
+                                    <div className="text-left">
+                                        <div className="text-lg font-bold">80 Kredit</div>
+                                        <div className="text-xs opacity-80">Paket Super</div>
+                                    </div>
+                                    <div className="text-xl font-bold">Rp 7.000</div>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Credit Pack Payment Modal */}
-            {selectedPack && (
-                <CreditPackPaymentModal
-                    isOpen={true}
-                    onClose={() => setSelectedPack(null)}
-                    onSuccess={() => setSelectedPack(null)}
-                    packType={selectedPack}
-                />
-            )}
+            {
+                selectedPack && (
+                    <CreditPackPaymentModal
+                        isOpen={true}
+                        onClose={() => setSelectedPack(null)}
+                        onSuccess={() => setSelectedPack(null)}
+                        packType={selectedPack}
+                    />
+                )
+            }
         </>
     );
 }

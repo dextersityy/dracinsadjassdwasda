@@ -26,12 +26,8 @@ export default function RootLayout({
       <head>
         {/* Telegram WebApp SDK - Raw script for better compatibility */}
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
-        {/* Monetag SDK */}
-        <script
-          src="//libtl.com/sdk.js"
-          data-zone="10522796"
-          data-sdk="show_10522796"
-        ></script>
+        {/* Adsgram SDK */}
+        <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
       </head>
       <body className={inter.className}>
         <SettingsProvider>

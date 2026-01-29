@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const QOUPAY_API_KEY = 'p7HG0qRualY4_XH9yyiVnAoygSE_d9Xw';
-const QOUPAY_BASE_URL = 'https://payment.qoupaypremium.web.id';
+const QOUPAY_API_KEY = process.env.QOUPAY_API_KEY!;
+const QOUPAY_BASE_URL = process.env.QOUPAY_BASE_URL || 'https://payment.qoupaypremium.web.id';
 
 export async function GET(request: NextRequest) {
     try {
