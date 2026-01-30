@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
-import { Users, Crown, Wallet, TrendingUp, RefreshCw, AlertCircle, ArrowUpRight, Check, X } from 'lucide-react';
+import { Users, Crown, Wallet, TrendingUp, RefreshCw, AlertCircle, ArrowUpRight, Check, X, MessageCircle, ListMusic } from 'lucide-react';
 import { approveWithdrawal } from './actions';
 
 // Admin user IDs - Ganti dengan ID user kamu yang asli
@@ -23,6 +24,9 @@ interface RecentUser {
     credits: number;
     isVip: boolean;
     createdAt: Date | null;
+    telegramId?: number;
+    username?: string;
+    firstName?: string;
 }
 
 interface WithdrawalRequest {
@@ -31,6 +35,8 @@ interface WithdrawalRequest {
     amount: number;
     status: 'pending' | 'paid' | 'rejected';
     createdAt: Date | null;
+    telegramId?: number;
+    telegramUsername?: string;
 }
 
 export default function AdminPage() {
@@ -82,6 +88,9 @@ export default function AdminPage() {
                     credits: data.credits || 0,
                     isVip: data.isVip || false,
                     createdAt: data.createdAt?.toDate() || null,
+                    telegramId: data.telegramId,
+                    username: data.username,
+                    firstName: data.firstName,
                 });
             });
 
@@ -119,6 +128,8 @@ export default function AdminPage() {
                     amount: data.amount,
                     status: data.status,
                     createdAt: data.createdAt?.toDate() || null,
+                    telegramId: data.telegramId,
+                    telegramUsername: data.telegramUsername,
                 });
             });
             setWithdrawals(withdrawalList);
@@ -135,10 +146,6 @@ export default function AdminPage() {
             setError(error.message || 'Gagal memuat data');
         }
     };
-
-
-
-    // ... imports
 
     const handleWithdrawalAction = async (id: string, action: 'paid' | 'rejected') => {
         if (!confirm(`Yakin ingin ${action === 'paid' ? 'menyetujui' : 'menolak'} penarikan ini?`)) return;
@@ -228,6 +235,25 @@ export default function AdminPage() {
                     />
                 </div>
 
+                {/* Quick Actions */}
+                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <Link
+                        href="/admin-dracin/playlists"
+                        className="p-4 bg-gray-800 rounded-xl border border-white/5 flex items-center justify-between hover:bg-gray-700 transition"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-pink-500/20 text-pink-500 rounded-lg">
+                                <ListMusic size={24} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white">Kelola Playlist</h3>
+                                <p className="text-xs text-gray-400">Buat koleksi drama tematik</p>
+                            </div>
+                        </div>
+                        <ArrowUpRight size={20} className="text-gray-500" />
+                    </Link>
+                </div>
+
                 {/* Withdrawal Requests */}
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-800 mb-6">
                     <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
@@ -251,7 +277,24 @@ export default function AdminPage() {
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className="font-bold text-white">ID: {wd.userId}</span>
+                                        <span className="font-bold text-white text-sm">
+                                            {wd.telegramId ? (
+                                                <span className="text-blue-400">ID: {wd.telegramId}</span>
+                                            ) : (
+                                                <span className="text-gray-400">UID: {wd.userId.slice(0, 10)}...</span>
+                                            )}
+                                        </span>
+                                        {wd.telegramUsername && (
+                                            <a
+                                                href={`https://t.me/${wd.telegramUsername}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="bg-blue-600/20 text-blue-400 p-1 rounded-full hover:bg-blue-600/40"
+                                                title={`Chat @${wd.telegramUsername}`}
+                                            >
+                                                <MessageCircle size={14} />
+                                            </a>
+                                        )}
                                     </div>
                                     <div className="text-green-400 font-bold mt-1">
                                         Rp {wd.amount.toLocaleString()}
@@ -296,14 +339,36 @@ export default function AdminPage() {
                                 key={index}
                                 className="flex items-center justify-between p-3 bg-gray-800 rounded-lg text-sm"
                             >
-                                <div className="flex items-center gap-2">
-                                    {user.isVip && <Crown size={14} className="text-amber-500" />}
-                                    <span className="font-mono text-gray-400">{user.id}</span>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        {user.isVip && <Crown size={14} className="text-amber-500" />}
+                                        <span className="font-bold text-white">
+                                            {user.firstName || 'User'}
+                                        </span>
+                                        {user.username && (
+                                            <span className="text-gray-400 text-xs">@{user.username}</span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="font-mono text-gray-500 text-xs">
+                                            {user.telegramId ? `ID: ${user.telegramId}` : user.id.slice(0, 12)}
+                                        </span>
+                                        {user.username && (
+                                            <a
+                                                href={`https://t.me/${user.username}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-400 hover:text-blue-300"
+                                            >
+                                                <MessageCircle size={12} />
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-blue-400">{user.credits} kredit</span>
+                                <div className="text-right">
+                                    <span className="text-blue-400 block">{user.credits} kredit</span>
                                     {user.createdAt && (
-                                        <span className="text-gray-500 text-xs">
+                                        <span className="text-gray-500 text-xs block">
                                             {user.createdAt.toLocaleDateString('id-ID')}
                                         </span>
                                     )}

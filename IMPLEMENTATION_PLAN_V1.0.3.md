@@ -8,6 +8,7 @@ Meningkatkan kemudahan manajemen user di Firebase Console agar lebih "human-read
 - **Explicit Telegram ID Logging:** Menambahkan field `telegramId`, `telegramUsername`, dan `telegramFirstName` ke setiap dokumen utama (`users`, `withdrawals`, `transactions`).
 - **User Search & Admin Tools:** Update dashboard `/admin-dracin` untuk mendukung pencarian berdasarkan Telegram ID dan tombol aksi cepat "Hubungi User".
 - **Refactoring User Service:** Memastikan setiap interaksi kunci (login/request) mencatat metadata identitas yang paling fresh dari Telegram WebApp.
+- **Backward Compatibility:** Update identitas akan bersifat *additive* (menambah field baru tanpa menghapus data lama). User lama akan otomatis terupdate saat mereka membuka aplikasi kembali.
 
 ## 2. Social Engagement Features
 Fitur interaksi untuk meningkatkan waktu kunjung user (stickiness).

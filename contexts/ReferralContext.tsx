@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { db, getAuthUser } from '@/lib/firebase';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, serverTimestamp, increment } from 'firebase/firestore';
+import { syncTelegramIdentity } from '@/lib/user-service'; // Import sync function
 
 interface ReferralData {
     referralCode: string;
@@ -85,6 +86,9 @@ export function ReferralProvider({ children }: ReferralProviderProps) {
                 }
 
                 setUserId(user.uid);
+
+                // SYNC IDENTITY: Ensure telegramId is up to date
+                await syncTelegramIdentity(user.uid);
 
                 const referralRef = doc(db, 'referrals', user.uid);
                 const referralSnap = await getDoc(referralRef);
@@ -213,11 +217,24 @@ export function ReferralProvider({ children }: ReferralProviderProps) {
 
             let username = 'User';
             let email = '';
+            let telegramId = null;
+            let telegramUsername = null;
 
             if (userDocSnap.exists()) {
                 const userData = userDocSnap.data();
                 username = userData.username || userData.displayName || 'User';
                 email = userData.email || '';
+                telegramId = userData.telegramId || null;
+                telegramUsername = userData.username || null;
+            }
+
+            // Fallback: Try get from window if not in DB
+            if (!telegramId && typeof window !== 'undefined') {
+                const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+                if (tgUser) {
+                    telegramId = tgUser.id;
+                    telegramUsername = tgUser.username || telegramUsername;
+                }
             }
 
             // Create withdrawal request document
@@ -226,6 +243,8 @@ export function ReferralProvider({ children }: ReferralProviderProps) {
                 userId,
                 username, // Added for admin tracking
                 email,    // Added for admin tracking
+                telegramId, // Explicit Telegram ID
+                telegramUsername, // Explicit Telegram Username
                 amount,
                 paymentDetails, // Bank details
                 status: 'pending',
@@ -280,6 +299,18 @@ export async function processReferralCommission(buyerUserId: string): Promise<vo
         const referrerId = buyerReferralSnap.data().referredBy;
         if (!referrerId) return; // No referrer
 
+        // Get buyer's identity for logging
+        let buyerTelegramId = null;
+        try {
+            const buyerUserRef = doc(db, 'users', buyerUserId);
+            const buyerUserSnap = await getDoc(buyerUserRef);
+            if (buyerUserSnap.exists()) {
+                buyerTelegramId = buyerUserSnap.data().telegramId || null;
+            }
+        } catch (e) {
+            // Ignore error fetching buyer details
+        }
+
         // Credit commission to referrer
         const referrerRef = doc(db, 'referrals', referrerId);
         await updateDoc(referrerRef, {
@@ -296,6 +327,7 @@ export async function processReferralCommission(buyerUserId: string): Promise<vo
         await setDoc(transactionRef, {
             referrerId,
             referredUserId: buyerUserId,
+            buyerTelegramId, // Log who bought it
             commission: COMMISSION_AMOUNT,
             status: 'pending',
             type: 'VIP_PURCHASE',

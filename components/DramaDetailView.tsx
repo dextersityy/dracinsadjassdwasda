@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Episode } from '@/types';
 import { TikTokPlayer } from '@/components/TikTokPlayer';
 import Link from 'next/link';
-import { ArrowLeft, Share2, Info, Star, Play, Clock, Users } from 'lucide-react';
+import { ArrowLeft, Share2, Info, Star, Play, Clock, Users, Heart, Bookmark } from 'lucide-react';
+import { db, getAuthUser } from '@/lib/firebase';
+import { doc, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 interface DramaDetailViewProps {
     drama: any;
@@ -15,6 +17,93 @@ interface DramaDetailViewProps {
 export default function DramaDetailView({ drama, episodes, dramaId }: DramaDetailViewProps) {
     const [isWatching, setIsWatching] = useState(false);
     const [startEpisode, setStartEpisode] = useState(0);
+
+    // Engagement State
+    const [isLiked, setIsLiked] = useState(false);
+    const [isBookmarked, setIsBookmarked] = useState(false);
+    const [watchingCount, setWatchingCount] = useState(0);
+
+    useEffect(() => {
+        // Randomize "Watching Now" count for social proof
+        setWatchingCount(Math.floor(Math.random() * (150 - 45 + 1)) + 45);
+
+        // Check Like/Bookmark status
+        checkUserInteractions();
+    }, [dramaId]);
+
+    const checkUserInteractions = async () => {
+        const user = await getAuthUser();
+        if (!user) return;
+
+        // Check Like
+        try {
+            const likeRef = doc(db, 'drama_likes', `${dramaId}_${user.uid}`);
+            const likeSnap = await getDoc(likeRef);
+            if (likeSnap.exists()) setIsLiked(true);
+        } catch (e) { console.error(e) }
+
+        // Check Bookmark
+        try {
+            const bookmarkRef = doc(db, 'users', user.uid, 'bookmarks', dramaId);
+            const bookmarkSnap = await getDoc(bookmarkRef);
+            if (bookmarkSnap.exists()) setIsBookmarked(true);
+        } catch (e) { console.error(e) }
+    };
+
+    const handleLike = async () => {
+        const user = await getAuthUser();
+        if (!user) return alert("Login dulu untuk menyukai drama!");
+
+        const newStatus = !isLiked;
+        setIsLiked(newStatus); // Optimistic update
+
+        const likeRef = doc(db, 'drama_likes', `${dramaId}_${user.uid}`);
+        if (newStatus) {
+            await setDoc(likeRef, {
+                userId: user.uid,
+                dramaId,
+                title: drama?.bookName || 'Unknown',
+                createdAt: serverTimestamp()
+            });
+        } else {
+            await deleteDoc(likeRef);
+        }
+    };
+
+    const handleBookmark = async () => {
+        const user = await getAuthUser();
+        if (!user) return alert("Login dulu untuk menyimpan drama!");
+
+        const newStatus = !isBookmarked;
+        setIsBookmarked(newStatus); // Optimistic update
+
+        const bookmarkRef = doc(db, 'users', user.uid, 'bookmarks', dramaId);
+        if (newStatus) {
+            await setDoc(bookmarkRef, {
+                dramaId,
+                title: drama?.bookName || 'Unknown',
+                cover: drama?.coverWap || drama?.cover || '',
+                createdAt: serverTimestamp()
+            });
+        } else {
+            await deleteDoc(bookmarkRef);
+        }
+    };
+
+    const handleShare = () => {
+        // Only simple share for now as requested
+        const url = window.location.href;
+        if (navigator.share) {
+            navigator.share({
+                title: drama?.bookName,
+                text: `Nonton drama seru "${drama?.bookName}" di DracinAja!`,
+                url: url,
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(url);
+            alert("Link disalin ke clipboard!");
+        }
+    };
 
     // If user clicked "Watch Now", show TikTok-style player
     if (isWatching) {
@@ -32,14 +121,19 @@ export default function DramaDetailView({ drama, episodes, dramaId }: DramaDetai
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white pb-28">
             {/* Navbar */}
-            <nav className="fixed top-0 z-40 w-full glass-panel border-none px-4 py-3 flex justify-between items-center">
-                <Link href="/" className="p-2 rounded-full hover:bg-white/10 active:scale-95 transition">
+            <nav className="fixed top-0 z-40 w-full glass-panel border-none px-4 py-3 flex justify-between items-center bg-transparent">
+                <Link href="/" className="p-2 rounded-full bg-black/40 backdrop-blur hover:bg-black/60 transition">
                     <ArrowLeft size={22} className="text-white" />
                 </Link>
-                <span className="text-sm font-semibold opacity-0">Detail</span>
-                <button className="p-2 rounded-full hover:bg-white/10 active:scale-95 transition">
-                    <Share2 size={22} className="text-white" />
-                </button>
+                {/* <span className="text-sm font-semibold opacity-0">Detail</span> */}
+                <div className="flex gap-2">
+                    <button onClick={handleBookmark} className="p-2 rounded-full bg-black/40 backdrop-blur hover:bg-black/60 transition">
+                        <Bookmark size={22} className={isBookmarked ? "text-amber-500 fill-amber-500" : "text-white"} />
+                    </button>
+                    <button onClick={handleShare} className="p-2 rounded-full bg-black/40 backdrop-blur hover:bg-black/60 transition">
+                        <Share2 size={22} className="text-white" />
+                    </button>
+                </div>
             </nav>
 
             {/* Hero Cover */}
@@ -69,7 +163,20 @@ export default function DramaDetailView({ drama, episodes, dramaId }: DramaDetai
                     <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
                         {drama?.bookName || 'Loading...'}
                     </h1>
-                    <div className="flex items-center gap-3 mt-3 flex-wrap text-xs text-gray-400 font-medium">
+
+                    {/* Engagement Bar */}
+                    <div className="flex items-center gap-4 mt-4">
+                        <button onClick={handleLike} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition active:scale-95">
+                            <Heart size={18} className={isLiked ? "text-red-500 fill-red-500" : "text-white"} />
+                            <span className="text-sm font-medium">{isLiked ? "Disukai" : "Suka"}</span>
+                        </button>
+                        <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs animate-pulse">
+                            <Users size={12} />
+                            <span>{watchingCount} orang sedang menonton</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 mt-4 flex-wrap text-xs text-gray-400 font-medium">
                         <div className="flex items-center gap-1 text-amber-400">
                             <Star size={12} fill="currentColor" />
                             <span>4.9</span>

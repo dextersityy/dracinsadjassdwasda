@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ---------------------------------------------------------
+    // ADMIN ACCESS HELPER
+    // ---------------------------------------------------------
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == 'y3VV7hsb2mOSi11HqydAZdnGw8R2'; 
+    }
+
+    // Default: tolak akses
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow list: if isAdmin();
+
+      // [NEW] Bookmarks Subcollection (Fixes "Simpan" error)
+      match /bookmarks/{bookmarkId} {
+        allow read, write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      }
+    }
+    
+    // Transactions
+    match /transactions/{transactionId} {
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow list: if isAdmin();
+    }
+    
+    // VIP Transactions
+    match /vip_transactions/{transactionId} {
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if request.auth != null;
+      allow update: if isAdmin();
+      allow list: if isAdmin();
+    }
+
+    // Dramas (public read)
+    match /dramas/{dramaId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // [NEW] Playlists (public read for Home Page, Admin write)
+    match /playlists/{playlistId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // [NEW] Drama Likes (Fixes "Like" error)
+    match /drama_likes/{likeId} {
+      // Allow reading specific like (e.g. checking if I liked it)
+      // Doc ID format is usually `dramaId_userId`
+      allow read: if (request.auth != null && likeId.matches('.*_' + request.auth.uid)) || isAdmin();
+      
+      // Allow create/delete if userId matches auth
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // [NEW] Drama Requests (Fixes "Req Drama" error)
+    match /drama_requests/{requestId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+    
+    // Referrals
+    match /referrals/{userId} {
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow list: if isAdmin();
+    }
+    
+    // Referral transactions
+    match /referral_transactions/{transId} {
+      allow read: if (request.auth != null && resource.data.referrerId == request.auth.uid) || isAdmin();
+      allow create: if request.auth != null;
+      allow list: if isAdmin();
+    }
+    
+    // Referral purchases tracking
+    match /referral_purchases/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Withdrawal Requests
+    match /withdrawal_requests/{requestId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow update: if isAdmin();
+      allow list: if isAdmin();
+    }
+  }
+}

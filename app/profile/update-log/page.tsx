@@ -4,6 +4,17 @@ import Link from 'next/link';
 export default function UpdateLog() {
     const updates = [
         {
+            version: "1.0.3",
+            date: "30 Jan 2026",
+            changes: [
+                "New Identity Logging & Sync",
+                "Admin Panel Enhancements (Contact Buttons, ID Display)",
+                "Social Features: Like, Bookmark, Watching Count",
+                "Special Collections (Playlists)",
+                "User Request System"
+            ]
+        },
+        {
             version: "1.0.1",
             date: "28 Jan 2026",
             changes: [

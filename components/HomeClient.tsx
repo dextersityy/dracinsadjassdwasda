@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Drama } from '@/types';
 import { DramaCard } from '@/components/DramaCard';
 import { HorizontalScrollList } from '@/components/HorizontalScrollList';
-import { Search } from 'lucide-react';
+import { Search, ListMusic } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
 // We would ideally use a library like 'swiper' or 'react-swipeable' for real text gestures, 
@@ -17,9 +17,10 @@ interface HomeClientProps {
     trendingDramas: Drama[]; // Used in For You
     latestDramas: Drama[];   // Unified Feed
     heroDrama: Drama | null;
+    playlists?: any[]; // Optional for now
 }
 
-export function HomeClient({ forYouDramas, trendingDramas, latestDramas, heroDrama }: HomeClientProps) {
+export function HomeClient({ forYouDramas, trendingDramas, latestDramas, heroDrama, playlists = [] }: HomeClientProps) {
     const [activeTab, setActiveTab] = useState<'foryou' | 'latest'>('foryou');
     const [touchStart, setTouchStart] = useState<number | null>(null);
     const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -106,22 +107,52 @@ export function HomeClient({ forYouDramas, trendingDramas, latestDramas, heroDra
                         {/* Featured Banner */}
                         {heroDrama && (
                             <div className="relative w-full h-56 md:h-72 mb-8 overflow-hidden group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-purple-900/80 to-blue-900/80 mix-blend-multiply z-10" />
-                                <img
-                                    src={heroDrama.coverWap}
-                                    className="w-full h-full object-cover opacity-60 transition duration-1000 group-hover:scale-105"
-                                    alt="Hero"
-                                />
-                                <div className="absolute inset-0 z-20 flex flex-col justify-end p-5 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent">
-                                    <span className="px-2 py-1 bg-amber-500 text-black text-[10px] font-bold rounded w-fit mb-2">TRENDING #1</span>
-                                    <Link href={`/drama/${heroDrama.bookId}`}>
+                                <Link href={`/drama/${heroDrama.bookId}`}>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-900/80 to-blue-900/80 mix-blend-multiply z-10" />
+                                    <img
+                                        src={heroDrama.coverWap}
+                                        className="w-full h-full object-cover opacity-60 transition duration-1000 group-hover:scale-105"
+                                        alt="Hero"
+                                    />
+                                    <div className="absolute inset-0 z-20 flex flex-col justify-end p-5 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent">
+                                        <span className="px-2 py-1 bg-amber-500 text-black text-[10px] font-bold rounded w-fit mb-2">TRENDING #1</span>
                                         <h2 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg line-clamp-2">
                                             {heroDrama.bookName}
                                         </h2>
-                                    </Link>
-                                    <p className="text-xs md:text-sm text-gray-300 mt-2 line-clamp-2 max-w-md">
-                                        {heroDrama.introduction || "Experience the most captivating stories, only on DracinAja."}
-                                    </p>
+                                        <p className="text-xs md:text-sm text-gray-300 mt-2 line-clamp-2 max-w-md">
+                                            {heroDrama.introduction || "Experience the most captivating stories, only on DracinAja."}
+                                        </p>
+                                    </div>
+                                </Link>
+                            </div>
+                        )}
+
+                        {/* Playlists / Special Collections */}
+                        {playlists && playlists.length > 0 && (
+                            <div className="px-5 mb-8">
+                                <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                                    <span className="w-1 h-5 bg-pink-500 rounded-full" />
+                                    Koleksi Spesial
+                                </h2>
+                                <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+                                    {playlists.map((p, idx) => (
+                                        <Link
+                                            key={p.id || idx}
+                                            href={`/playlist/${p.id}`}
+                                            className="flex-shrink-0 w-44 h-28 bg-gradient-to-br from-indigo-900/80 to-purple-900/80 border border-white/10 rounded-xl p-3 flex flex-col justify-between relative overflow-hidden group hover:border-pink-500/50 transition-all"
+                                        >
+                                            <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:scale-110 transition-transform">
+                                                <ListMusic size={48} />
+                                            </div>
+                                            <div className="z-10 mt-auto">
+                                                <h3 className="font-bold text-sm text-white line-clamp-2 mb-1">{p.title}</h3>
+                                                <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                                                    <ListMusic size={10} />
+                                                    <span>{p.dramas?.length || 0} Judul</span>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))}
                                 </div>
                             </div>
                         )}

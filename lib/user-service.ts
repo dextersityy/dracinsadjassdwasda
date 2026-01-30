@@ -15,6 +15,10 @@ export interface UserData {
     vipExpiry: Date | null;
     createdAt?: Date;
     updatedAt?: Date;
+    // Identity Logging
+    telegramId?: number;
+    username?: string;
+    firstName?: string;
 }
 
 const DEFAULT_USER_DATA: UserData = {
@@ -24,6 +28,12 @@ const DEFAULT_USER_DATA: UserData = {
     vipExpiry: null,
 };
 
+// Helper: Get Telegram User safely
+function getTelegramUser() {
+    if (typeof window === 'undefined') return null;
+    return (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+}
+
 /**
  * Get user ID from Firebase Auth (anonymous or authenticated)
  * This now uses Firebase Anonymous Auth for secure access
@@ -32,8 +42,8 @@ export async function getUserIdAsync(): Promise<string | null> {
     if (typeof window === 'undefined') return null;
 
     // Try to get Telegram User ID first (for Telegram Mini App)
-    const telegram = (window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: { id?: number } } } } }).Telegram;
-    if (telegram?.WebApp?.initDataUnsafe?.user?.id) {
+    const telegramUser = getTelegramUser();
+    if (telegramUser?.id) {
         // For Telegram users, we still use Firebase Auth but can link the Telegram ID
         const user = await getAuthUser();
         return user?.uid || null;
@@ -68,6 +78,10 @@ export async function getUserData(userId: string): Promise<UserData | null> {
                 vipExpiry: data.vipExpiry ? (data.vipExpiry as Timestamp).toDate() : null,
                 createdAt: data.createdAt ? (data.createdAt as Timestamp).toDate() : undefined,
                 updatedAt: data.updatedAt ? (data.updatedAt as Timestamp).toDate() : undefined,
+                // Return Identity Fields
+                telegramId: data.telegramId,
+                username: data.username,
+                firstName: data.firstName,
             };
         }
         return null;
@@ -82,10 +96,18 @@ export async function getUserData(userId: string): Promise<UserData | null> {
  */
 export async function createUser(userId: string, initialData?: Partial<UserData>): Promise<void> {
     try {
+        const telegramUser = getTelegramUser();
+        const identityData = telegramUser ? {
+            telegramId: telegramUser.id,
+            username: telegramUser.username,
+            firstName: telegramUser.first_name,
+        } : {};
+
         const userRef = doc(db, 'users', userId);
         await setDoc(userRef, {
             ...DEFAULT_USER_DATA,
             ...initialData,
+            ...identityData, // Auto-capture identity
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         });
@@ -184,6 +206,30 @@ export async function syncUserData(userId: string, data: Partial<UserData>): Pro
     }
 }
 
+/**
+ * Explicitly sync Telegram Identity (For backward compatibility)
+ * Call this on app launch to update existing users with new fields
+ */
+export async function syncTelegramIdentity(userId: string): Promise<void> {
+    try {
+        const telegramUser = getTelegramUser();
+        if (!telegramUser) return;
+
+        const userRef = doc(db, 'users', userId);
+
+        // We use updateDoc (will fail if doc doesn't exist, which is fine)
+        await updateDoc(userRef, {
+            telegramId: telegramUser.id,
+            username: telegramUser.username || null,
+            firstName: telegramUser.first_name || null,
+            updatedAt: serverTimestamp(), // Keep track of last active
+        });
+    } catch (error) {
+        // Silent fail is okay, maybe user document doesn't exist yet or network error
+        // console.warn('Failed to sync Telegram identity', error);
+    }
+}
+
 export interface TransactionData {
     userId: string;
     transactionId: string;
@@ -192,6 +238,8 @@ export interface TransactionData {
     type: 'vip_purchase';
     createdAt?: Date;
     paidAt?: Date;
+    // Identity Logging
+    telegramId?: number;
 }
 
 /**
@@ -204,6 +252,7 @@ export async function recordVipTransaction(
     status: 'pending' | 'paid' | 'expired' | 'failed'
 ): Promise<void> {
     try {
+        const telegramUser = getTelegramUser();
         const transactionRef = doc(db, 'transactions', transactionId);
         const transactionData: Record<string, unknown> = {
             userId,
@@ -213,6 +262,11 @@ export async function recordVipTransaction(
             type: 'vip_purchase',
             updatedAt: serverTimestamp(),
         };
+
+        // Log identity if available
+        if (telegramUser?.id) {
+            transactionData.telegramId = telegramUser.id;
+        }
 
         // Check if transaction exists
         const existingTx = await getDoc(transactionRef);
