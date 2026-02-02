@@ -113,9 +113,9 @@ export const publicApi = {
             if (!res.ok) return [];
             const data = await res.json();
             return data.map((item: any) => ({
-                bookId: item.bookId || item.book_id || item.id,
-                bookName: item.bookName || item.book_name || item.title,
-                coverWap: item.cover || item.coverWap,
+                bookId: item.bookId || item.book_id || item.id || item.jump_param?.book_id || item.params?.bookId,
+                bookName: item.bookName || item.book_name || item.title || item.jump_param?.book_title,
+                coverWap: item.cover || item.coverWap || item.jump_param?.book_pic,
                 introduction: item.introduction || item.description,
                 tags: item.tagNames || item.tags,
                 protagonist: item.protagonist,
