@@ -1,4 +1,4 @@
-import { publicApi } from '@/lib/public-api';
+import { getTrendingDramas } from '@/lib/public-api';
 import { reelshortApi } from '@/lib/reelshort-api';
 import { DramaCard } from '@/components/DramaCard';
 import Link from 'next/link';
@@ -10,7 +10,7 @@ export default async function TrendingPage({ searchParams }: { searchParams: Pro
 
     const dramas = provider === 'reelshort'
         ? await reelshortApi.getTrendingDramas()
-        : await publicApi.getTrendingDramas();
+        : await getTrendingDramas();
 
     return (
         <main className="min-h-screen bg-[#0a0a0a] text-white pb-24">

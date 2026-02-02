@@ -1,4 +1,4 @@
-import { publicApi } from '@/lib/public-api';
+import { getDramaDetail, getEpisodes } from '@/lib/public-api';
 import { reelshortApi } from '@/lib/reelshort-api';
 import DramaDetailView from '@/components/DramaDetailView';
 
@@ -13,8 +13,8 @@ export default async function DramaPage(props: Props) {
     const { id } = params;
 
     // Try Dramabox first
-    let drama = await publicApi.getDramaDetail(id);
-    let episodes = await publicApi.getEpisodes(id);
+    let drama = await getDramaDetail(id);
+    let episodes = await getEpisodes(id);
 
     // If not found in Dramabox, try Reelshort
     if (!drama || episodes.length === 0) {

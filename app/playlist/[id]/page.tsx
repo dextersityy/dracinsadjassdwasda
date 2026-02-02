@@ -1,6 +1,6 @@
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { publicApi } from '@/lib/public-api';
+import { getDramaDetail } from '@/lib/public-api';
 import { reelshortApi } from '@/lib/reelshort-api';
 import { notFound } from 'next/navigation';
 import { DramaCard } from '@/components/DramaCard';
@@ -33,7 +33,7 @@ export default async function PlaylistPage(props: Props) {
         const bookId = item.bookId;
 
         // Try Dramabox
-        let detail = await publicApi.getDramaDetail(bookId);
+        let detail = await getDramaDetail(bookId);
 
         // If not found, try Reelshort
         if (!detail) {

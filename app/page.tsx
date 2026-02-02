@@ -1,4 +1,4 @@
-import { publicApi } from '@/lib/public-api';
+import { getLatestDramas, getForYouDramas, getTrendingDramas } from '@/lib/public-api';
 import { reelshortApi } from '@/lib/reelshort-api';
 import { HomeClient } from '@/components/HomeClient';
 import { db } from '@/lib/firebase';
@@ -13,9 +13,9 @@ export default async function Home() {
     reelshortTrending,
     playlistsSnapshot
   ] = await Promise.all([
-    publicApi.getLatestDramas(),
-    publicApi.getForYouDramas(),
-    publicApi.getTrendingDramas(),
+    getLatestDramas(),
+    getForYouDramas(),
+    getTrendingDramas(),
     reelshortApi.getLatestDramas(),
     reelshortApi.getTrendingDramas(),
     // Safe Playlist Fetch

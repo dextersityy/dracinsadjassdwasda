@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { publicApi } from '@/lib/public-api';
+import { getPopularSearch, searchDramas } from '@/lib/public-api';
 import { Drama } from '@/types';
 import { DramaCard } from '@/components/DramaCard';
 import { Search as SearchIcon, TrendingUp, X } from 'lucide-react';
@@ -15,7 +15,7 @@ export default function SearchPage() {
 
     // Fetch popular searches on mount
     useEffect(() => {
-        publicApi.getPopularSearch().then(setPopularTags);
+        getPopularSearch().then(setPopularTags);
     }, []);
 
     // Debounce search
@@ -35,7 +35,7 @@ export default function SearchPage() {
         }
 
         setIsSearching(true);
-        publicApi.searchDramas(debouncedQuery).then((data) => {
+        searchDramas(debouncedQuery).then((data) => {
             setResults(data);
             setIsSearching(false);
         });
