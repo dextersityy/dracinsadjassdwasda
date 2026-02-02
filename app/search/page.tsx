@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getPopularSearch, searchDramas } from '@/lib/public-api';
+import { searchDramasNetshort } from '@/lib/netshort-api';
 import { Drama } from '@/types';
 import { DramaCard } from '@/components/DramaCard';
 import { Search as SearchIcon, TrendingUp, X } from 'lucide-react';
@@ -34,11 +35,23 @@ export default function SearchPage() {
             return;
         }
 
-        setIsSearching(true);
-        searchDramas(debouncedQuery).then((data) => {
-            setResults(data);
-            setIsSearching(false);
-        });
+        const fetchResults = async () => {
+            setIsSearching(true);
+            try {
+                const [res1, res2] = await Promise.all([
+                    searchDramas(debouncedQuery),
+                    searchDramasNetshort(debouncedQuery)
+                ]);
+                setResults([...res1, ...res2]);
+            } catch (error) {
+                console.error("Search failed", error);
+                setResults([]);
+            } finally {
+                setIsSearching(false);
+            }
+        };
+
+        fetchResults();
     }, [debouncedQuery]);
 
     return (

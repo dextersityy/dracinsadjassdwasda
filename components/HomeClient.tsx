@@ -16,11 +16,12 @@ interface HomeClientProps {
     forYouDramas: Drama[];
     trendingDramas: Drama[]; // Used in For You
     latestDramas: Drama[];   // Unified Feed
+    netshortSections?: { title: string; dramas: Drama[] }[];
     heroDrama: Drama | null;
     playlists?: any[]; // Optional for now
 }
 
-export function HomeClient({ forYouDramas, trendingDramas, latestDramas, heroDrama, playlists = [] }: HomeClientProps) {
+export function HomeClient({ forYouDramas, trendingDramas, latestDramas, netshortSections = [], heroDrama, playlists = [] }: HomeClientProps) {
     const [activeTab, setActiveTab] = useState<'foryou' | 'latest'>('foryou');
     const [touchStart, setTouchStart] = useState<number | null>(null);
     const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -159,6 +160,10 @@ export function HomeClient({ forYouDramas, trendingDramas, latestDramas, heroDra
 
                         <HorizontalScrollList title="For You" dramas={forYouDramas} />
                         <HorizontalScrollList title="Trending Now" dramas={trendingDramas} />
+
+                        {netshortSections.map((section, idx) => (
+                            <HorizontalScrollList key={`ns-${idx}`} title={section.title} dramas={section.dramas} />
+                        ))}
 
                         {/* Random Discovery Section (Idea) */}
                         <div className="px-5 mt-8 mb-4">

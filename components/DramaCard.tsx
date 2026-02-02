@@ -7,8 +7,12 @@ interface DramaCardProps {
 }
 
 export function DramaCard({ drama }: DramaCardProps) {
+    const href = drama.source === 'netshort'
+        ? `/play/netshort/${drama.bookId}?title=${encodeURIComponent(drama.bookName)}&cover=${encodeURIComponent(drama.coverWap)}`
+        : `/drama/${drama.bookId}`;
+
     return (
-        <Link href={`/drama/${drama.bookId}`} className="group relative block overflow-hidden rounded-xl bg-gray-900/50 shadow-lg transition-all duration-300 hover:scale-[1.03] hover:shadow-amber-500/10 hover:shadow-xl">
+        <Link href={href} className="group relative block overflow-hidden rounded-xl bg-gray-900/50 shadow-lg transition-all duration-300 hover:scale-[1.03] hover:shadow-amber-500/10 hover:shadow-xl">
             {/* Image Container with Aspect Ratio */}
             <div className="relative aspect-[2/3] w-full overflow-hidden">
                 <img
@@ -34,7 +38,7 @@ export function DramaCard({ drama }: DramaCardProps) {
                     {drama.bookName}
                 </h3>
                 <p className="mt-1 text-[10px] text-gray-300 font-medium opacity-80">
-                    DracinAja Original
+                    {drama.source === 'netshort' ? 'Netshort' : 'DracinAja Original'}
                 </p>
             </div>
         </Link>

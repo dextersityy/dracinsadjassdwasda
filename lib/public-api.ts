@@ -132,7 +132,12 @@ export async function getDramaDetail(bookId: string) {
             return null;
         }
 
-        const json = await res.json();
+        const text = await res.text();
+        if (!text) {
+            console.warn(`[API] Detail returned empty body for ${bookId}`);
+            return null;
+        }
+        const json = JSON.parse(text);
         // Check if json is valid or has minimal fields
         if (!json || (!json.bookId && !json.bookName)) {
             console.warn(`[API] Detail returned empty/invalid for ${bookId}:`, json);
@@ -156,7 +161,9 @@ export async function getEpisodes(bookId: string): Promise<Episode[]> {
             console.error(`[API] Fetch Episodes Failed: ${res.status} for ${bookId}`);
             return [];
         }
-        const data = await res.json();
+        const text = await res.text();
+        if (!text) return [];
+        const data = JSON.parse(text);
 
         if (!Array.isArray(data)) {
             console.warn(`[API] Episodes response is not array for ${bookId}:`, data);

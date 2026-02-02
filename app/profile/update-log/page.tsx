@@ -4,6 +4,18 @@ import Link from 'next/link';
 export default function UpdateLog() {
     const updates = [
         {
+            version: "1.0.4",
+            date: "3 Feb 2026",
+            changes: [
+                "New Provider: Netshort Integration",
+                "Homepage: Added Netshort Collections",
+                "Trending: Dual Provider Selector (Server Utama & Netshort)",
+                "Search: Unified Results from multiple sources",
+                "Player: Dedicated Netshort Player",
+                "Bug Fixes & API Parsers Optimization"
+            ]
+        },
+        {
             version: "1.0.3",
             date: "30 Jan 2026",
             changes: [

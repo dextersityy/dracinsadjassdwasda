@@ -1,5 +1,6 @@
 import { getTrendingDramas } from '@/lib/public-api';
 import { getTrendingDramasReelshort } from '@/lib/reelshort-api';
+import { getTrendingNetshort } from '@/lib/netshort-api';
 import { DramaCard } from '@/components/DramaCard';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -10,7 +11,9 @@ export default async function TrendingPage({ searchParams }: { searchParams: Pro
 
     const dramas = provider === 'reelshort'
         ? await getTrendingDramasReelshort()
-        : await getTrendingDramas();
+        : provider === 'netshort'
+            ? await getTrendingNetshort()
+            : await getTrendingDramas();
 
     return (
         <main className="min-h-screen bg-[#0a0a0a] text-white pb-24">
@@ -22,7 +25,7 @@ export default async function TrendingPage({ searchParams }: { searchParams: Pro
                 </h1>
 
                 {/* Provider Selector */}
-                <div className="flex p-1 bg-white/5 rounded-xl">
+                <div className="flex p-1 bg-white/5 rounded-xl gap-1">
                     <Link
                         href="/trending?provider=dramabox"
                         className={clsx(
@@ -30,7 +33,7 @@ export default async function TrendingPage({ searchParams }: { searchParams: Pro
                             provider === 'dramabox' ? "bg-amber-500 text-black shadow-lg" : "text-gray-400 hover:text-white"
                         )}
                     >
-                        Dramabox
+                        Server Utama
                     </Link>
                     <Link
                         href="/trending?provider=reelshort"
@@ -40,6 +43,15 @@ export default async function TrendingPage({ searchParams }: { searchParams: Pro
                         )}
                     >
                         Reelshort
+                    </Link>
+                    <Link
+                        href="/trending?provider=netshort"
+                        className={clsx(
+                            "flex-1 py-2 text-sm font-bold text-center rounded-lg transition-all",
+                            provider === 'netshort' ? "bg-amber-500 text-black shadow-lg" : "text-gray-400 hover:text-white"
+                        )}
+                    >
+                        Netshort
                     </Link>
                 </div>
             </header>
