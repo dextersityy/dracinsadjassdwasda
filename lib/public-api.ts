@@ -2,10 +2,19 @@ import { Drama, Episode } from '@/types';
 
 const API_BASE = 'https://dramabox.sansekai.my.id/api/dramabox';
 
+const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Origin': 'https://www.dramaboxdb.com',
+    'Referer': 'https://www.dramaboxdb.com/',
+};
+
 export const publicApi = {
     getLatestDramas: async (): Promise<Drama[]> => {
         try {
-            const res = await fetch(`${API_BASE}/latest`, { next: { revalidate: 3600 } });
+            const res = await fetch(`${API_BASE}/latest`, {
+                next: { revalidate: 3600 },
+                headers
+            });
             if (!res.ok) {
                 console.warn(`[API] Failed to fetch latest: ${res.status}`);
                 return [];
@@ -25,7 +34,10 @@ export const publicApi = {
 
     getForYouDramas: async (): Promise<Drama[]> => {
         try {
-            const res = await fetch(`${API_BASE}/foryou`, { next: { revalidate: 3600 } });
+            const res = await fetch(`${API_BASE}/foryou`, {
+                next: { revalidate: 3600 },
+                headers
+            });
             if (!res.ok) return [];
             const data = await res.json();
             return data.map((item: any) => ({
@@ -40,7 +52,10 @@ export const publicApi = {
 
     getTrendingDramas: async (): Promise<Drama[]> => {
         try {
-            const res = await fetch(`${API_BASE}/trending`, { next: { revalidate: 3600 } });
+            const res = await fetch(`${API_BASE}/trending`, {
+                next: { revalidate: 3600 },
+                headers
+            });
             if (!res.ok) return [];
             const data = await res.json();
             return data.map((item: any) => ({
@@ -56,7 +71,10 @@ export const publicApi = {
 
     getPopularSearch: async (): Promise<Drama[]> => {
         try {
-            const res = await fetch(`${API_BASE}/populersearch`, { next: { revalidate: 3600 } });
+            const res = await fetch(`${API_BASE}/populersearch`, {
+                next: { revalidate: 3600 },
+                headers
+            });
             if (!res.ok) return [];
             const data = await res.json();
             return data.map((item: any) => ({
@@ -74,7 +92,10 @@ export const publicApi = {
 
     searchDramas: async (query: string): Promise<Drama[]> => {
         try {
-            const res = await fetch(`${API_BASE}/search?query=${encodeURIComponent(query)}`, { cache: 'no-store' });
+            const res = await fetch(`${API_BASE}/search?query=${encodeURIComponent(query)}`, {
+                cache: 'no-store',
+                headers
+            });
             if (!res.ok) return [];
             const data = await res.json();
             return data.map((item: any) => ({
@@ -92,7 +113,10 @@ export const publicApi = {
 
     getDramaDetail: async (bookId: string) => {
         try {
-            const res = await fetch(`${API_BASE}/detail?bookId=${bookId}`, { next: { revalidate: 3600 } });
+            const res = await fetch(`${API_BASE}/detail?bookId=${bookId}`, {
+                next: { revalidate: 3600 },
+                headers
+            });
             if (!res.ok) return null;
             return await res.json();
         } catch (error) {
@@ -102,7 +126,10 @@ export const publicApi = {
 
     getEpisodes: async (bookId: string): Promise<Episode[]> => {
         try {
-            const res = await fetch(`${API_BASE}/allepisode?bookId=${bookId}`, { next: { revalidate: 3600 } });
+            const res = await fetch(`${API_BASE}/allepisode?bookId=${bookId}`, {
+                next: { revalidate: 3600 },
+                headers
+            });
             if (!res.ok) return [];
             const data = await res.json();
 

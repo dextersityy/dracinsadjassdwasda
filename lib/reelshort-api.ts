@@ -2,10 +2,19 @@ import { Drama, Episode } from '@/types';
 
 const REELSHORT_BASE = 'https://api.sansekai.my.id/api/reelshort';
 
+const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Origin': 'https://www.reelshort.com',
+    'Referer': 'https://www.reelshort.com/',
+};
+
 export const reelshortApi = {
     getHomepage: async () => {
         try {
-            const res = await fetch(`${REELSHORT_BASE}/homepage`, { next: { revalidate: 3600 } });
+            const res = await fetch(`${REELSHORT_BASE}/homepage`, {
+                next: { revalidate: 3600 },
+                headers
+            });
             if (!res.ok) return null;
             return await res.json();
         } catch (error) {
@@ -71,7 +80,10 @@ export const reelshortApi = {
 
     getDetail: async (bookId: string) => {
         try {
-            const res = await fetch(`${REELSHORT_BASE}/detail?bookId=${bookId}`, { next: { revalidate: 3600 } });
+            const res = await fetch(`${REELSHORT_BASE}/detail?bookId=${bookId}`, {
+                next: { revalidate: 3600 },
+                headers
+            });
             if (!res.ok) return null;
             const json = await res.json();
             if (!json.success) return null;
@@ -92,7 +104,10 @@ export const reelshortApi = {
 
     getEpisodes: async (bookId: string): Promise<Episode[]> => {
         try {
-            const res = await fetch(`${REELSHORT_BASE}/allepisode?bookId=${bookId}`, { next: { revalidate: 3600 } });
+            const res = await fetch(`${REELSHORT_BASE}/allepisode?bookId=${bookId}`, {
+                next: { revalidate: 3600 },
+                headers
+            });
             if (!res.ok) return [];
             const json = await res.json();
             if (!json.success || !json.episodes) return [];
@@ -120,7 +135,10 @@ export const reelshortApi = {
 
     searchDramas: async (query: string): Promise<Drama[]> => {
         try {
-            const res = await fetch(`${REELSHORT_BASE}/search?query=${encodeURIComponent(query)}`, { cache: 'no-store' });
+            const res = await fetch(`${REELSHORT_BASE}/search?query=${encodeURIComponent(query)}`, {
+                cache: 'no-store',
+                headers
+            });
             if (!res.ok) return [];
             const json = await res.json();
             if (!json.success || !json.results) return [];
