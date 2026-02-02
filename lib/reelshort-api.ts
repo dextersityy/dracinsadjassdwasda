@@ -1,4 +1,5 @@
 import { Drama, Episode } from '@/types';
+import { ProxyAgent } from 'undici';
 
 const REELSHORT_BASE = 'https://api.sansekai.my.id/api/reelshort';
 
@@ -8,12 +9,17 @@ const headers = {
     'Referer': 'https://www.reelshort.com/',
 };
 
+const proxyUrl = process.env.PROXY_URL;
+const dispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
+
 export const reelshortApi = {
     getHomepage: async () => {
         try {
             const res = await fetch(`${REELSHORT_BASE}/homepage`, {
                 next: { revalidate: 3600 },
-                headers
+                headers,
+                // @ts-ignore
+                dispatcher
             });
             if (!res.ok) return null;
             return await res.json();
@@ -82,7 +88,9 @@ export const reelshortApi = {
         try {
             const res = await fetch(`${REELSHORT_BASE}/detail?bookId=${bookId}`, {
                 next: { revalidate: 3600 },
-                headers
+                headers,
+                // @ts-ignore
+                dispatcher
             });
             if (!res.ok) return null;
             const json = await res.json();
@@ -106,7 +114,9 @@ export const reelshortApi = {
         try {
             const res = await fetch(`${REELSHORT_BASE}/allepisode?bookId=${bookId}`, {
                 next: { revalidate: 3600 },
-                headers
+                headers,
+                // @ts-ignore
+                dispatcher
             });
             if (!res.ok) return [];
             const json = await res.json();
@@ -137,7 +147,9 @@ export const reelshortApi = {
         try {
             const res = await fetch(`${REELSHORT_BASE}/search?query=${encodeURIComponent(query)}`, {
                 cache: 'no-store',
-                headers
+                headers,
+                // @ts-ignore
+                dispatcher
             });
             if (!res.ok) return [];
             const json = await res.json();

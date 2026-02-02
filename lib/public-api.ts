@@ -1,6 +1,7 @@
 import { Drama, Episode } from '@/types';
+import { ProxyAgent } from 'undici';
 
-const API_BASE = 'https://dramabox.sansekai.my.id/api/dramabox';
+const API_BASE = 'https://api.sansekai.my.id/api/dramabox';
 
 const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -8,12 +9,17 @@ const headers = {
     'Referer': 'https://www.dramaboxdb.com/',
 };
 
+const proxyUrl = process.env.PROXY_URL;
+const dispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
+
 export const publicApi = {
     getLatestDramas: async (): Promise<Drama[]> => {
         try {
             const res = await fetch(`${API_BASE}/latest`, {
                 next: { revalidate: 3600 },
-                headers
+                headers,
+                // @ts-ignore - native fetch types don't officially support dispatcher yet but it works in Node env
+                dispatcher
             });
             if (!res.ok) {
                 console.warn(`[API] Failed to fetch latest: ${res.status}`);
@@ -36,14 +42,16 @@ export const publicApi = {
         try {
             const res = await fetch(`${API_BASE}/foryou`, {
                 next: { revalidate: 3600 },
-                headers
+                headers,
+                // @ts-ignore
+                dispatcher
             });
             if (!res.ok) return [];
             const data = await res.json();
             return data.map((item: any) => ({
-                bookId: item.bookId,
-                bookName: item.bookName,
-                coverWap: item.coverWap,
+                bookId: item.bookId || item.book_id,
+                bookName: item.bookName || item.book_name || item.title,
+                coverWap: item.coverWap || item.cover,
             }));
         } catch (error) {
             return [];
@@ -54,7 +62,9 @@ export const publicApi = {
         try {
             const res = await fetch(`${API_BASE}/trending`, {
                 next: { revalidate: 3600 },
-                headers
+                headers,
+                // @ts-ignore
+                dispatcher
             });
             if (!res.ok) return [];
             const data = await res.json();
@@ -73,7 +83,9 @@ export const publicApi = {
         try {
             const res = await fetch(`${API_BASE}/populersearch`, {
                 next: { revalidate: 3600 },
-                headers
+                headers,
+                // @ts-ignore
+                dispatcher
             });
             if (!res.ok) return [];
             const data = await res.json();
@@ -94,15 +106,17 @@ export const publicApi = {
         try {
             const res = await fetch(`${API_BASE}/search?query=${encodeURIComponent(query)}`, {
                 cache: 'no-store',
-                headers
+                headers,
+                // @ts-ignore
+                dispatcher
             });
             if (!res.ok) return [];
             const data = await res.json();
             return data.map((item: any) => ({
-                bookId: item.bookId,
-                bookName: item.bookName,
+                bookId: item.bookId || item.book_id || item.id,
+                bookName: item.bookName || item.book_name || item.title,
                 coverWap: item.cover || item.coverWap,
-                introduction: item.introduction,
+                introduction: item.introduction || item.description,
                 tags: item.tagNames || item.tags,
                 protagonist: item.protagonist,
             }));
@@ -115,7 +129,9 @@ export const publicApi = {
         try {
             const res = await fetch(`${API_BASE}/detail?bookId=${bookId}`, {
                 next: { revalidate: 3600 },
-                headers
+                headers,
+                // @ts-ignore
+                dispatcher
             });
             if (!res.ok) return null;
             return await res.json();
@@ -128,7 +144,9 @@ export const publicApi = {
         try {
             const res = await fetch(`${API_BASE}/allepisode?bookId=${bookId}`, {
                 next: { revalidate: 3600 },
-                headers
+                headers,
+                // @ts-ignore
+                dispatcher
             });
             if (!res.ok) return [];
             const data = await res.json();
@@ -141,6 +159,10 @@ export const publicApi = {
                         const bestQuality = defaultCdn.videoPathList.find((v: any) => v.quality === 720 || v.quality === 1080) || defaultCdn.videoPathList[0];
                         videoUrl = bestQuality.videoPath;
                     }
+                } else if (ep.videoUrl) {
+                    videoUrl = ep.videoUrl;
+                } else if (ep.url) {
+                    videoUrl = ep.url;
                 }
 
                 return {
