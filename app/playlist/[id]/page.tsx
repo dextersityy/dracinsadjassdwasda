@@ -1,7 +1,7 @@
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { getDramaDetail } from '@/lib/public-api';
-import { reelshortApi } from '@/lib/reelshort-api';
+import { getDetailReelshort } from '@/lib/reelshort-api';
 import { notFound } from 'next/navigation';
 import { DramaCard } from '@/components/DramaCard';
 import { ArrowLeft, ListMusic } from 'lucide-react';
@@ -37,7 +37,7 @@ export default async function PlaylistPage(props: Props) {
 
         // If not found, try Reelshort
         if (!detail) {
-            detail = await reelshortApi.getDetail(bookId);
+            detail = await getDetailReelshort(bookId);
         }
 
         return detail;

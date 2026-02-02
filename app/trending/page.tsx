@@ -1,5 +1,5 @@
 import { getTrendingDramas } from '@/lib/public-api';
-import { reelshortApi } from '@/lib/reelshort-api';
+import { getTrendingDramasReelshort } from '@/lib/reelshort-api';
 import { DramaCard } from '@/components/DramaCard';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -9,7 +9,7 @@ export default async function TrendingPage({ searchParams }: { searchParams: Pro
     const provider = resolvedParams?.provider || 'dramabox';
 
     const dramas = provider === 'reelshort'
-        ? await reelshortApi.getTrendingDramas()
+        ? await getTrendingDramasReelshort()
         : await getTrendingDramas();
 
     return (

@@ -1,5 +1,5 @@
 import { getLatestDramas, getForYouDramas, getTrendingDramas } from '@/lib/public-api';
-import { reelshortApi } from '@/lib/reelshort-api';
+import { getLatestDramasReelshort, getTrendingDramasReelshort } from '@/lib/reelshort-api';
 import { HomeClient } from '@/components/HomeClient';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
@@ -16,8 +16,8 @@ export default async function Home() {
     getLatestDramas(),
     getForYouDramas(),
     getTrendingDramas(),
-    reelshortApi.getLatestDramas(),
-    reelshortApi.getTrendingDramas(),
+    getLatestDramasReelshort(),
+    getTrendingDramasReelshort(),
     // Safe Playlist Fetch
     getDocs(query(collection(db, 'playlists'), orderBy('createdAt', 'desc'))).catch((err) => {
       console.error("Failed to load playlists (check firestore rules):", err);

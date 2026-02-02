@@ -1,29 +1,24 @@
 "use server";
 
 import { Drama, Episode } from '@/types';
-import { ProxyAgent } from 'undici';
 
 const API_BASE = 'https://api.sansekai.my.id/api/dramabox';
 
+// Minimal headers - sometimes API needs User-Agent even if not proxy spoofing
+// But user requested "REMOVE ALL ANTI BAN CARA", so I will use minimal headers or none if possible.
+// Standard fetch usually sends a default UA.
 const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Origin': 'https://www.dramaboxdb.com',
-    'Referer': 'https://www.dramaboxdb.com/',
+    'Content-Type': 'application/json'
 };
-
-const proxyUrl = process.env.PROXY_URL;
-const dispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
 
 export async function getLatestDramas(): Promise<Drama[]> {
     try {
         const res = await fetch(`${API_BASE}/latest`, {
             next: { revalidate: 3600 },
-            headers,
-            // @ts-ignore - native fetch types don't officially support dispatcher yet but it works in Node env
-            dispatcher
+            headers
         });
         if (!res.ok) {
-            console.warn(`[API] Failed to fetch latest: ${res.status}`);
+            console.error(`[API] Failed to fetch latest: ${res.status} ${res.statusText}`);
             return [];
         }
         const data = await res.json();
@@ -34,7 +29,7 @@ export async function getLatestDramas(): Promise<Drama[]> {
             introduction: item.introduction,
         }));
     } catch (error) {
-        console.warn("[API] Error fetching latest dramas:", error);
+        console.error("[API] Error fetching latest dramas:", error);
         return [];
     }
 }
@@ -43,9 +38,7 @@ export async function getForYouDramas(): Promise<Drama[]> {
     try {
         const res = await fetch(`${API_BASE}/foryou`, {
             next: { revalidate: 3600 },
-            headers,
-            // @ts-ignore
-            dispatcher
+            headers
         });
         if (!res.ok) return [];
         const data = await res.json();
@@ -55,6 +48,7 @@ export async function getForYouDramas(): Promise<Drama[]> {
             coverWap: item.coverWap || item.cover,
         }));
     } catch (error) {
+        console.error("[API] Error fetching ForYou:", error);
         return [];
     }
 }
@@ -63,9 +57,7 @@ export async function getTrendingDramas(): Promise<Drama[]> {
     try {
         const res = await fetch(`${API_BASE}/trending`, {
             next: { revalidate: 3600 },
-            headers,
-            // @ts-ignore
-            dispatcher
+            headers
         });
         if (!res.ok) return [];
         const data = await res.json();
@@ -84,9 +76,7 @@ export async function getPopularSearch(): Promise<Drama[]> {
     try {
         const res = await fetch(`${API_BASE}/populersearch`, {
             next: { revalidate: 3600 },
-            headers,
-            // @ts-ignore
-            dispatcher
+            headers
         });
         if (!res.ok) return [];
         const data = await res.json();
@@ -107,9 +97,7 @@ export async function searchDramas(query: string): Promise<Drama[]> {
     try {
         const res = await fetch(`${API_BASE}/search?query=${encodeURIComponent(query)}`, {
             cache: 'no-store',
-            headers,
-            // @ts-ignore
-            dispatcher
+            headers
         });
         if (!res.ok) return [];
         const data = await res.json();
@@ -122,48 +110,72 @@ export async function searchDramas(query: string): Promise<Drama[]> {
             protagonist: item.protagonist,
         }));
     } catch (error) {
+        console.error("[API] Search Error:", error);
         return [];
     }
 }
 
 export async function getDramaDetail(bookId: string) {
+    if (!bookId) {
+        console.error("[API] getDramaDetail called with empty bookId");
+        return null;
+    }
     try {
+        console.log(`[API] Fetching Detail for: ${bookId}`);
         const res = await fetch(`${API_BASE}/detail?bookId=${bookId}`, {
             next: { revalidate: 3600 },
-            headers,
-            // @ts-ignore
-            dispatcher
+            headers
         });
-        if (!res.ok) return null;
-        return await res.json();
+
+        if (!res.ok) {
+            console.error(`[API] Fetch Detail Failed: ${res.status} for ${bookId}`);
+            return null;
+        }
+
+        const json = await res.json();
+        // Check if json is valid or has minimal fields
+        if (!json || (!json.bookId && !json.bookName)) {
+            console.warn(`[API] Detail returned empty/invalid for ${bookId}:`, json);
+            // Don't return null yet if it might be valid but unusual
+        }
+        return json;
     } catch (error) {
+        console.error(`[API] Error fetching detail ${bookId}:`, error);
         return null;
     }
 }
 
 export async function getEpisodes(bookId: string): Promise<Episode[]> {
+    if (!bookId) return [];
     try {
         const res = await fetch(`${API_BASE}/allepisode?bookId=${bookId}`, {
             next: { revalidate: 3600 },
-            headers,
-            // @ts-ignore
-            dispatcher
+            headers
         });
-        if (!res.ok) return [];
+        if (!res.ok) {
+            console.error(`[API] Fetch Episodes Failed: ${res.status} for ${bookId}`);
+            return [];
+        }
         const data = await res.json();
+
+        if (!Array.isArray(data)) {
+            console.warn(`[API] Episodes response is not array for ${bookId}:`, data);
+            return [];
+        }
 
         return data.map((ep: any) => {
             let videoUrl = '';
-            if (ep.cdnList && ep.cdnList.length > 0) {
+            // Try explicit videoUrl first if available (some APIs differ)
+            if (ep.videoUrl) {
+                videoUrl = ep.videoUrl;
+            } else if (ep.url) {
+                videoUrl = ep.url;
+            } else if (ep.cdnList && ep.cdnList.length > 0) {
                 const defaultCdn = ep.cdnList.find((c: any) => c.isDefault) || ep.cdnList[0];
                 if (defaultCdn && defaultCdn.videoPathList && defaultCdn.videoPathList.length > 0) {
                     const bestQuality = defaultCdn.videoPathList.find((v: any) => v.quality === 720 || v.quality === 1080) || defaultCdn.videoPathList[0];
                     videoUrl = bestQuality.videoPath;
                 }
-            } else if (ep.videoUrl) {
-                videoUrl = ep.videoUrl;
-            } else if (ep.url) {
-                videoUrl = ep.url;
             }
 
             return {
@@ -174,10 +186,7 @@ export async function getEpisodes(bookId: string): Promise<Episode[]> {
             };
         });
     } catch (error) {
+        console.error(`[API] Error fetching episodes ${bookId}:`, error);
         return [];
     }
 }
-
-// Export as object for backward compatibility (where possible) but functions are preferred
-// We remove the object export because it cannot be "use server" if it contains non-serializable things or simple ref
-// The best way is to update imports.

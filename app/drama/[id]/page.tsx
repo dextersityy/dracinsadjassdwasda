@@ -1,5 +1,5 @@
 import { getDramaDetail, getEpisodes } from '@/lib/public-api';
-import { reelshortApi } from '@/lib/reelshort-api';
+import { getDetailReelshort, getEpisodesReelshort } from '@/lib/reelshort-api';
 import DramaDetailView from '@/components/DramaDetailView';
 
 // Correctly typing params for Next.js 15+ (PageProps)
@@ -18,8 +18,8 @@ export default async function DramaPage(props: Props) {
 
     // If not found in Dramabox, try Reelshort
     if (!drama || episodes.length === 0) {
-        drama = await reelshortApi.getDetail(id);
-        episodes = await reelshortApi.getEpisodes(id);
+        drama = await getDetailReelshort(id);
+        episodes = await getEpisodesReelshort(id);
     }
 
     if (!drama || episodes.length === 0) {
